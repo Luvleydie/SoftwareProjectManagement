@@ -1,0 +1,60 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam ParticipantBackgroundColor #EAF3FA
+skinparam LifeLineBorderColor #9BAFBE
+skinparam noteBackgroundColor #FFF4D6
+autonumber
+title D08 · Borrado consistente, derivados y exportaciones\nFR-05, FR-17 · BR-08 · NFR-08, NFR-12, NFR-15, NFR-16 · AC-03, AC-12, AC-20
+actor "Usuario" as U
+boundary "UI04 / UI07" as UI
+control "M03 / M07 · API" as API
+database "PostgreSQL\nartifacts / artifact_dependencies" as DB
+control "Worker de purga" as PURGE
+control "Worker en curso\nIA / ingesta / exportación" as W
+collections "Objetos privados\noriginales y exportaciones" as OBJ
+U -> UI : Eliminar documento o solicitar borrado de cuenta
+UI -> API : DELETE /api/v1/documents/{id}\no POST /api/v1/privacy-requests (DELETE_ACCOUNT)
+API -> DB : Validar sesión, propietario y alcance
+API -> DB : TX: bloquear artifacts raíz; marcar INVALIDATED\ne incrementar generation
+API -> DB : Excluir documentos / chunks / evidencia\ne invalidar ai_runs, análisis, borradores y mensajes derivados
+API -> DB : Invalidar exports vinculadas; cancelar jobs pendientes\ncrear job PURGE PENDING + tombstone + auditoría
+opt Borrado de cuenta
+  API -> DB : Cuenta DELETION_PENDING; revocar sesiones\ncomprobante limitado a seguimiento de la solicitud
+end
+API -> DB : COMMIT atómico
+API --> UI : 202 · solicitud aceptada y estado\ncontenido ya no disponible
+note over API,DB
+Cada lectura, búsqueda y descarga aplica permisos + estado vigente.
+Un administrador no puede omitir el filtro por propietario.
+Objetos y exportaciones se sirven por API; no hay enlaces públicos persistentes.
+end note
+par Trabajo ya iniciado intenta finalizar
+  W -> DB : Bloquear raíz y revalidar generation\nantes de publicar resultados / exportaciones
+  DB --> W : Raíz borrada o generation diferente
+  W -> OBJ : Eliminar artefacto temporal propio, si existe
+  W -> DB : CANCELLED / INVALIDATED; no publicar derivados
+else Purga asíncrona
+  PURGE -> DB : Reclamar job con lease; enumerar dependencias
+  PURGE -> OBJ : Borrar original, texto extraído y exports afectadas
+  PURGE -> DB : Purgar texto, chunks, vectores y contenido derivado\nconservar solo metadatos mínimos permitidos
+  alt Fallo temporal del almacenamiento
+    PURGE -> DB : Conservar exclusión; programar reintento acotado\nno declarar purga completada
+  else Purga verificada
+    PURGE -> DB : Artefactos PURGED; solicitud / job SUCCEEDED\nauditoría mínima sin contenido eliminado
+  end
+end
+opt Intento posterior de lectura / descarga
+  UI -> API : GET recurso o exportación previamente disponible
+  API -> DB : Verificar propietario + estado de raíz / dependencias
+  API --> UI : 404 / 410 · contenido no disponible
+end
+note over DB,OBJ
+Las copias de seguridad vencen según política aprobada; no se promete borrado físico instantáneo.
+Una restauración debe reaplicar tombstones antes de servir lecturas o ejecutar jobs.
+Los plazos y excepciones de retención requieren ratificación antes de producción.
+end note
+@enduml

@@ -1,0 +1,119 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #526E87
+skinparam entityBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+skinparam nodesep 50
+skinparam ranksep 55
+top to bottom direction
+
+' Generado desde §9 por scripts/generar_modelo_er.py; editar el Mermaid de origen.
+title
+D09e · Artefactos e invalidación de derivados
+Claves y cardinalidades · diccionario completo en §8
+end title
+entity "users" as users {
+  id : uuid <<PK>>
+  email : text <<UK>>
+  password_hash : text
+  role : text
+  status : text
+}
+entity "artifacts" as artifacts {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  kind : text
+  state : text
+  generation : integer
+  delete_after : timestamptz
+}
+entity "artifact_dependencies" as artifact_dependencies {
+  parent_id : uuid <<PK,FK>>
+  child_id : uuid <<PK,FK>>
+}
+entity "documents" as documents {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK>>
+  object_key : text
+  ingestion_state : text
+  security_state : text
+}
+entity "messages" as messages {
+  id : uuid <<PK>>
+  conversation_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  run_id : uuid <<FK,UK>>
+  role : text
+  body : text
+}
+entity "ai_runs" as ai_runs {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  input_message_id : uuid <<FK>>
+  state : text
+  model_version : text
+  prompt_version : text
+  retrieval_parameters : jsonb
+}
+entity "analyses" as analyses {
+  id : uuid <<PK>>
+  document_id : uuid <<FK>>
+  run_id : uuid <<FK,UK>>
+  artifact_id : uuid <<FK,UK>>
+  findings : jsonb
+}
+entity "drafts" as drafts {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  conversation_id : uuid <<FK>>
+  run_id : uuid <<FK,UK>>
+  artifact_id : uuid <<FK,UK>>
+  output_type : text
+  body : text
+  revision : integer
+}
+entity "exports" as exports {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  origin_kind : text
+  conversation_id : uuid <<FK>>
+  draft_id : uuid <<FK>>
+  draft_revision : integer
+  privacy_request_id : uuid <<FK>>
+  state : text
+  object_key : text
+}
+users ||--o{ artifacts : controla
+users ||--o{ exports : descarga
+artifacts ||--o{ artifact_dependencies : entrada
+artifacts ||--o{ artifact_dependencies : derivado
+artifacts ||--o| documents : representa
+artifacts ||--o| messages : representa
+artifacts ||--o| ai_runs : representa
+artifacts ||--o| analyses : representa
+artifacts ||--o| drafts : representa
+artifacts ||--o| exports : representa
+messages |o--o{ ai_runs : pregunta
+ai_runs |o--o| messages : responde
+documents ||--o{ analyses : analiza
+ai_runs ||--o| analyses : produce
+ai_runs ||--o| drafts : produce
+drafts |o--o{ exports : version_editable
+legend bottom
+PK = primaria · FK = foránea · UK = única · o = opcional · | = uno · { = varios
+Atributos estructurales; obligatoriedad, enums, índices y restricciones completos en §8.
+Vista parcial: las tablas repetidas designan las mismas entidades; todas las relaciones figuran en D09.
+artifacts.kind exige un subtipo compatible; artifact_dependencies es un DAG del mismo propietario.
+endlegend
+@enduml

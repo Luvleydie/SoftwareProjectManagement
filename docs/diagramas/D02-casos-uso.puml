@@ -1,0 +1,54 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam usecaseBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+left to right direction
+title D02 · Casos de uso y límites de acceso
+actor "Usuario" as U
+actor "Administrador" as A
+actor "Servicio de correo" as MAIL
+rectangle "juridIA · apoyo jurídico preliminar" {
+  usecase "Registrarse, iniciar / cerrar sesión\ny recuperar acceso\nFR-01" as AUTH
+  usecase "Validar segundo factor\nNFR-06" as MFA
+  usecase "Organizar expediente e historial\ny definir jurisdicción / fecha\nFR-04, FR-16" as CASE
+  usecase "Cargar, consultar y eliminar\ndocumentos propios\nFR-05, FR-06" as DOC
+  usecase "Consultar sobre eventos\n(contingencias, permisos,\nresponsabilidad y privacidad)\nFR-03, FR-11–FR-14" as CHAT
+  usecase "Mostrar evidencia, citas,\nlimitaciones y aviso legal\nFR-15, FR-20" as EVID
+  usecase "Revisar cláusulas, obligaciones\ny riesgos de documentos\nFR-07–FR-09" as ANALYZE
+  usecase "Generar y editar borrador\npreliminar de contrato\nFR-10" as DRAFT
+  usecase "Exportar resumen / datos\ny solicitar borrado de cuenta\nFR-17" as PRIV
+  usecase "Reportar respuesta inexacta\nFR-19" as FEED
+  usecase "Añadir, versionar, desactivar\ny reindexar fuentes legales\nFR-18" as SOURCE
+  usecase "Gestionar roles y revisar\neventos de seguridad autorizados\nFR-02, NFR-15" as ADMIN
+}
+U --> AUTH
+U --> CASE
+U --> DOC
+U --> CHAT
+U --> ANALYZE
+U --> DRAFT
+U --> PRIV
+U --> FEED
+A --> AUTH
+A --> SOURCE
+A --> ADMIN
+MAIL --> AUTH
+MFA ..> AUTH : <<extend>>\n[rol Administrator]
+CHAT ..> EVID : <<include>>
+ANALYZE ..> EVID : <<include>>
+DRAFT ..> EVID : <<include>>
+legend bottom
+No se emite sesión administrativa antes del MFA.
+El rol administrativo autoriza fuentes y operación.
+No otorga lectura de contenido privado ajeno.
+Feedback no modifica automáticamente las fuentes.
+Sin evidencia: abstención o petición de contexto.
+Fuera del ámbito de eventos: límite explícito.
+Resultados editables y sujetos a revisión profesional.
+endlegend
+@enduml

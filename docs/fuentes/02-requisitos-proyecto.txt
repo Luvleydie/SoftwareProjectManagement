@@ -1,0 +1,478 @@
+1. System Scope and Purpose
+Project scope. The product is a web-based artificial intelligence application for preliminary legal support focused on event organization and the contracts, permits, compliance obligations, liability issues, and personal-data matters commonly associated with events. It is not intended to provide general legal representation or to replace a licensed lawyer.
+Project purpose. The application will help users ask legal questions, review and organize legal documents, identify relevant clauses and obligations, prepare preliminary contract drafts, and consult a controlled legal knowledge base through a Retrieval-Augmented Generation (RAG) workflow. Every legally relevant response must show its jurisdiction and supporting source when evidence is available.
+Target users. Event organizers, administrative staff, small businesses, project teams, and authorized legal/compliance reviewers who need preliminary guidance before requesting professional legal advice or making a binding decision.
+2. Requirements
+The requirements below were revised to make the scope explicit, separate functions that can be tested independently, add measurable quality targets, strengthen security and privacy controls, and improve AI traceability. Priorities use Must for mandatory requirements and Should for desirable requirements in the first release.
+Functional Requirements
+FR-01 - User registration and authentication [Must]: The application must allow account creation, secure sign-in, sign-out, password recovery, and session termination.
+FR-02 - Role management [Must]: The system must support at least User and Administrator roles and restrict administrative functions to authorized accounts.
+FR-03 - Legal consultation through chat [Must]: The user must be able to submit legal questions in natural language and receive a structured answer based on the legal knowledge base and the information provided in the consultation.
+FR-04 - Jurisdiction and matter context [Must]: Before a legally specific answer is generated, the user must be able to provide country, state/region, type of matter, relevant date, and event context.
+FR-05 - Document upload and management [Must]: Users must be able to upload, list, open, organize, and delete supported legal documents in PDF, DOCX, and TXT formats.
+FR-06 - Scanned-document text extraction [Should]: When a PDF does not contain usable text, the system should provide OCR-based extraction before indexing or analysis.
+FR-07 - Clause identification [Must]: The system must identify and label relevant clauses in an uploaded contract or legal document.
+FR-08 - Obligation and deadline extraction [Must]: The system must extract relevant parties, obligations, dates, deadlines, payment conditions, and penalties when they are present in a document.
+FR-09 - Risk and inconsistency detection [Must]: The system must flag potential inconsistencies, missing information, conflicting clauses, and areas that may require professional review.
+FR-10 - Preliminary contract drafting [Must]: The system must generate editable preliminary clauses or templates for venues, artists, catering, sponsors, technical suppliers, ticketing, and similar event-related agreements.
+FR-11 - Contingency and force-majeure support [Must]: The system must provide source-backed preliminary information about cancellation, postponement, refunds, penalties, weather events, health emergencies, artist cancellation, and force-majeure clauses.
+FR-12 - Event permits and compliance support [Must]: The system must help identify potentially applicable requirements such as civil protection, capacity limits, music/copyright licensing, alcohol permits, noise rules, and other event-related local obligations.
+FR-13 - Insurance and liability support [Should]: The system must provide source-backed preliminary information about civil liability, equipment coverage, waivers, and allocation of responsibility among organizers, staff, suppliers, and attendees.
+FR-14 - Personal-data and consent support [Must]: The system must help identify privacy and consent obligations related to attendee databases, accreditations, image/video use, and personal-data processing.
+FR-15 - Source citations and traceability [Must]: Every legal answer based on the knowledge base must show the source name and, when available, article, clause, section, jurisdiction, effective date, and version.
+FR-16 - Conversation and case history [Should]: Users must be able to save consultations, reopen previous conversations, and associate uploaded documents with a case or event.
+FR-17 - Export and account-data controls [Must]: Users must be able to export a readable consultation summary, request an export of their stored data, and request deletion of their account and associated content subject to the retention policy.
+FR-18 - Administrative source management [Must]: Administrators must be able to add, update, deactivate, and remove legal sources and trigger re-indexing while preserving source/version metadata.
+FR-19 - Feedback mechanism [Should]: Users must be able to report an inaccurate, outdated, or unclear answer for review. User feedback must not automatically overwrite legal sources.
+FR-20 - Mandatory legal disclaimer [Must]: The consultation interface and generated legal drafts or summaries must display a notice stating that the system provides preliminary informational support and does not replace advice from a licensed legal professional.
+Non-Functional Requirements
+NFR-01 - Responsive usability [Must]: The main consultation, upload, document-review, and history functions must be usable on desktop, tablet, and mobile layouts without horizontal scrolling in the primary workflow.
+NFR-02 - Interface performance [Must]: Under the defined test load, at least 95% of non-AI interface requests must complete in 3 seconds or less, excluding file-upload transfer time.
+NFR-03 - AI response time [Should]: Under the defined test load and for ordinary consultations that do not require OCR, at least 90% of AI requests must begin returning a response within 15 seconds.
+NFR-04 - Availability [Should]: The production service must target at least 99% monthly availability, excluding announced maintenance windows.
+NFR-05 - Transport security [Must]: All production web traffic must use HTTPS with a current supported TLS configuration.
+NFR-06 - Credential security and MFA [Must]: Passwords must be stored using a modern adaptive password-hashing algorithm. Administrator accounts must use multi-factor authentication.
+NFR-07 - Encryption at rest [Must]: Confidential documents, consultation data, and authentication secrets stored by the platform must be encrypted at rest or protected by an equivalent managed-storage control.
+NFR-08 - Authorization and data isolation [Must]: A user must not be able to read, modify, retrieve, or search another user’s private documents or consultation history without explicit authorization.
+NFR-09 - File security [Must]: Uploaded files must be validated by type and size and scanned or isolated against malicious content before they are processed by the AI pipeline.
+NFR-10 - Abuse and authentication protection [Must]: Authentication endpoints and high-cost AI endpoints must apply rate limiting; repeated failed sign-in attempts must trigger a temporary protection mechanism.
+NFR-11 - Secrets management [Must]: API keys, model credentials, database passwords, and other secrets must not be stored directly in source code or committed to version control.
+NFR-12 - Privacy, retention, and model-training restriction [Must]: The platform must define retention/deletion periods for documents and consultations and must not use private user content to train models without explicit consent.
+NFR-13 - Accessibility [Should]: The main user flows must be designed and tested against WCAG 2.1 Level AA criteria applicable to keyboard navigation, labels, contrast, focus, and understandable error messages.
+NFR-14 - Browser compatibility [Should]: The application must support the two most recent stable versions of Chrome, Edge, Firefox, and Safari at the time of release.
+NFR-15 - Audit logging [Must]: The platform must record authentication failures, administrative source changes, document-ingestion events, deletion events, and security-relevant actions without storing passwords or unnecessary confidential text in logs.
+NFR-16 - Backup and recovery [Must]: Application data and legal-source metadata must be backed up on a scheduled basis. A restoration test must be documented before production release.
+NFR-17 - Maintainability and testing [Should]: Critical authentication, authorization, document-deletion, retrieval, and citation functions must have automated tests, and configuration must be separated from source code.
+Business Rules and Legal Safeguards
+BR-01 - Defined legal scope [Must]: The first release is limited to preliminary legal support for event organization and related contracts/compliance. Questions outside this scope must be identified as outside the supported domain.
+BR-02 - No replacement of professional counsel [Must]: The application must not present itself as a law firm or as a substitute for a licensed lawyer. Binding or high-impact decisions must be marked for professional review.
+BR-03 - Jurisdiction visibility [Must]: The jurisdiction and relevant date used for a legal answer must be visible. If jurisdiction is unknown or insufficient, the system must request it or explicitly state the limitation.
+BR-04 - No invented legal authority [Must]: The system must not fabricate statutes, articles, cases, agencies, or citations. If evidence is insufficient, the response must state that the claim could not be supported by the available sources.
+BR-05 - Source validity and hierarchy [Must]: Legal sources must store jurisdiction, effective date, version/status, document type, and authority level when available so current and higher-authority sources can be distinguished from secondary material.
+BR-06 - Conflicting sources [Must]: When retrieved sources conflict, the system must disclose the conflict and show the relevant sources instead of silently selecting one as unquestionably correct.
+BR-07 - Human review before binding use [Must]: Generated contracts, clauses, legal summaries, and compliance suggestions must remain editable and must be presented as requiring review before signature, filing, payment, cancellation, or another binding action.
+BR-08 - Deletion consistency [Must]: When a document is deleted, the application must remove or deactivate the associated extracted text, chunks, embeddings, and retrieval references according to the retention policy.
+BR-09 - Private-content training restriction [Must]: Private uploaded documents and consultations must not be added to any training dataset without separate, explicit user consent.
+AI and RAG Requirements
+AI-01 - Grounded responses [Must]: Legally relevant claims must be grounded in retrieved sources when such sources exist. General explanatory text must be clearly distinguishable from source-backed legal information.
+AI-02 - Evidence display [Must]: The system must display the passages or references that support the main legal statements so the user can verify them.
+AI-03 - Abstention on insufficient evidence [Must]: When retrieval produces weak, irrelevant, or insufficient evidence, the assistant must request additional context or state that it cannot support a reliable answer from the current knowledge base.
+AI-04 - Source freshness [Must]: The retrieval process must prefer active/current legal sources and must not present an obsolete version as current when a newer active version is available in the knowledge base.
+AI-05 - Source hierarchy awareness [Should]: Where metadata is available, retrieval and answer generation should prioritize primary and higher-authority legal sources over secondary explanatory material.
+AI-06 - Conflict disclosure [Must]: When relevant retrieved sources materially disagree, the answer must identify the disagreement and cite the competing sources.
+AI-07 - Prompt-injection resistance [Must]: Uploaded documents and retrieved text must be treated as untrusted data rather than system instructions. The application must isolate or ignore embedded instructions that attempt to alter system behavior or reveal protected data.
+AI-08 - Sensitive-data minimization [Must]: The AI pipeline must minimize transmission of personal or confidential information to external services. External model use must be controlled by configuration and privacy rules.
+3. Proposed RAG Architecture and Vectorization
+This section describes the proposed implementation architecture. It is intentionally separated from the requirements because technology choices are design decisions rather than user requirements.
+Component
+Audited design decision
+Application database and vector store
+PostgreSQL with pgvector is selected as the baseline because it can store users, cases, source metadata, permissions, and vector embeddings in one controlled platform while supporting metadata-filtered similarity search.
+Embedding model
+EmbeddingGemma deployed locally or in a controlled container is the initial embedding option. Its suitability must be validated with the retrieval-quality test set before release.
+Document ingestion
+Validate file type/size -> malware/isolation control -> text extraction -> OCR when required -> cleaning -> legal-structure-aware chunking -> embeddings -> metadata -> indexing -> ingestion status.
+Chunking
+Begin with semantic/legal-hierarchy chunks such as titles, articles, clauses, and annexes. A 400-800 token range with 10-15% overlap may be tested, then adjusted based on retrieval evaluation.
+Required metadata
+Source ID, title, document type, jurisdiction, effective date, version/status, authority level, section/article/clause, owner/access level, ingestion timestamp, and active/inactive status.
+Retrieval
+Semantic similarity plus metadata filters for jurisdiction, date/status, source type, authority level, and access permissions. Re-ranking may be added if evaluation shows a measurable benefit.
+Version updates
+When a source is replaced, the previous version must be marked inactive or historical, and obsolete vectors must not be returned as current evidence.
+Answer generation
+The model receives the user question, matter context, jurisdiction, retrieved evidence, and response rules. The output includes a concise answer, citations, limitations/conflicts when applicable, and the legal disclaimer.
+
+
+4. Acceptance Criteria
+ID
+Acceptance criterion
+Validates
+AC-01
+A new user can register, sign in, sign out, and recover access; an administrator uses MFA.
+FR-01, FR-02, NFR-06
+AC-02
+A standard user cannot access administrator source-management functions or another user’s private documents/history.
+FR-02, NFR-08
+AC-03
+A user can upload a supported document; invalid or unsafe files are rejected or isolated; deleting the document removes it from new retrieval results.
+FR-05, FR-06, BR-08, NFR-09
+AC-04
+A legal question is answered with the selected jurisdiction and matter date/context shown in the consultation.
+FR-03, FR-04, BR-03
+AC-05
+For a representative contract, the system separately identifies clauses, parties/obligations/dates/penalties, and potential inconsistencies or missing information.
+FR-07, FR-08, FR-09
+AC-06
+A user can generate an event-related preliminary contract/section, edit it, and see the legal-review disclaimer before use.
+FR-10, FR-20, BR-07
+AC-07
+Event-law consultations can return source-backed information for contingency, permits/compliance, liability, and data/consent topics when supporting sources exist.
+FR-11, FR-12, FR-13, FR-14
+AC-08
+Every source-backed legal answer displays traceable source metadata and does not cite a source that was not retrieved for that answer.
+FR-15, AI-01, AI-02, BR-04
+AC-09
+When evidence is insufficient, the system explicitly reports the limitation and does not invent a statute, article, case, agency, or citation.
+BR-04, AI-03
+AC-10
+When current and obsolete versions coexist, the current/active version is used as current evidence; historical material is labeled appropriately.
+BR-05, AI-04
+AC-11
+When authoritative sources conflict, the answer discloses the disagreement and presents the competing citations.
+BR-06, AI-06
+AC-12
+Users can save/reopen a case, export a readable summary, and request export/deletion of their stored account data.
+FR-16, FR-17, NFR-12
+AC-13
+An administrator can add/update/deactivate a legal source and re-index it while preserving version, date, jurisdiction, and authority metadata.
+FR-18, BR-05
+AC-14
+A user can submit feedback on an answer without the feedback automatically changing the official legal source set.
+FR-19
+AC-15
+In performance testing, at least 95% of non-AI requests complete in <=3 seconds and at least 90% of ordinary non-OCR AI requests begin responding in <=15 seconds.
+NFR-02, NFR-03
+AC-16
+Production traffic uses HTTPS; confidential stored content is protected at rest; secrets are absent from source control; rate limits are active on authentication/high-cost AI endpoints.
+NFR-05, NFR-07, NFR-10, NFR-11
+AC-17
+The main workflows pass the selected WCAG 2.1 AA checks and execute in the supported browser versions and responsive layouts.
+NFR-01, NFR-13, NFR-14
+AC-18
+Audit logs contain the required security/administrative events without passwords or unnecessary confidential content.
+NFR-15
+AC-19
+A documented backup can be restored successfully in a test environment before production release.
+NFR-16
+AC-20
+Critical automated tests run successfully for authentication, authorization, deletion, retrieval, and citation behavior.
+NFR-17
+AC-21
+A test document containing prompt-injection instructions does not override system rules or expose protected information.
+AI-07
+AC-22
+The AI audit record for a selected answer contains model/version, prompt/template version, retrieval parameters, source IDs, and timestamp.
+AI-09
+AC-23
+The documented RAG evaluation set is executed before release and records source relevance, citation correctness, and insufficient-evidence outcomes.
+AI-10
+AC-24
+Private user content is not used for model training unless separate explicit consent is recorded.
+BR-09, NFR-12, AI-08
+
+
+5. Requirements Traceability Matrix
+Area
+Functional IDs
+Related rules / NFR / AI
+Acceptance
+Authentication and authorization
+FR-01, FR-02
+NFR-06, NFR-08
+AC-01, AC-02
+Legal chat and context
+FR-03, FR-04
+BR-03
+AC-04
+Document management
+FR-05, FR-06
+NFR-09, BR-08
+AC-03
+Document legal analysis
+FR-07, FR-08, FR-09
+AI-01, AI-02
+AC-05, AC-08
+Drafting and professional-review safeguard
+FR-10, FR-20
+BR-02, BR-07
+AC-06
+Event compliance support
+FR-11, FR-12, FR-13, FR-14
+BR-01
+AC-07
+Source traceability and validity
+FR-15, FR-18
+BR-04, BR-05, AI-04, AI-05
+AC-08, AC-10, AC-13
+Cases, exports, privacy rights
+FR-16, FR-17
+NFR-12, BR-09
+AC-12, AC-24
+Feedback
+FR-19
+-
+AC-14
+Conflicts and insufficient evidence
+-
+BR-06, AI-03, AI-06
+AC-09, AC-11
+Performance and availability
+-
+NFR-02, NFR-03, NFR-04
+AC-15 + availability monitoring
+Security controls
+-
+NFR-05, NFR-07, NFR-10, NFR-11, AI-07
+AC-16, AC-21
+Accessibility/compatibility
+-
+NFR-01, NFR-13, NFR-14
+AC-17
+Audit, backup, maintainability
+-
+NFR-15, NFR-16, NFR-17
+AC-18, AC-19, AC-20
+AI privacy and reproducibility
+-
+AI-08, AI-09
+AC-22, AC-24
+RAG quality
+-
+AI-10
+AC-23
+
+
+6. Requirements Audit Result
+Internal requirements audit result: APPROVED FOR PROJECT PLANNING AND ACADEMIC DEVELOPMENT after correction. This approval means the specification is sufficiently clear and testable to continue with design and implementation; it is not a legal, cybersecurity, or regulatory certification.
+Audit area
+Status
+Result
+Scope definition
+Approved
+The first release is explicitly limited to legal support for event organization and related contracts/compliance.
+Atomicity of requirements
+Approved
+Document-analysis functions were separated into clause identification, extraction, and risk/inconsistency detection.
+Measurability
+Approved
+Performance, compatibility, security, backup, and AI behavior now include testable conditions.
+Security and privacy
+Approved
+Encryption, MFA for administrators, file validation, rate limiting, secrets management, retention, deletion, and model-training restrictions were added.
+AI/RAG reliability
+Approved
+Abstention, source freshness, source hierarchy, conflict disclosure, prompt-injection resistance, and traceability were added.
+Traceability
+Approved
+Acceptance criteria and a requirements traceability matrix now connect requirements to verification activities.
+Architecture separation
+Approved
+Technology choices are documented separately from user/system requirements, and PostgreSQL + pgvector is selected as the baseline vector/data platform.
+
+
+Recommended next step. Convert the acceptance criteria into executable test cases and create a prioritized product backlog for the first implementation sprint.
+
+7. LLM-Driven Software Requirements QA Audit Activity
+Activity Specification: LLM-Driven Software Requirements QA Audit
+Overview and Context. Building on the manual baseline audit previously completed, this activity transitions the team to automating software quality assurance (QA) processes using Large Language Models (LLMs). Defective, ambiguous, contradictory, or incomplete requirements can lead to flawed architectures, inaccurate estimates, weak test coverage, and AI behavior that is difficult to control in production.
+In this hands-on activity, students act as AI-Assisted Software QA Engineers. Using Zero-Shot, Few-Shot, and Chain-of-Thought-style multi-step prompting, the team will design, execute, and evaluate prompt strategies to identify requirement defects, rewrite non-compliant statements, and generate verification criteria. The existing audited requirements in Sections 2 through 6 serve as the project manual baseline and ground truth for comparison.
+Dataset alignment. The instructor activity mentions identifiers such as CON-03A, ACT-01, ERR-01, and GOV-01 from the Software Requirements Audit Exercise. If that separate PDF or Markdown dataset is provided, those exact identifiers must be preserved. For this project document, the same method is applied to the current FR, NFR, BR, and AI requirement IDs.
+7Learning Objectives
+Automate Defect Detection via Prompting: formulate, test, and compare Zero-Shot, Few-Shot, and multi-step reasoning prompts across functional, AI/ML, data, non-functional, security, and governance requirements.
+Standardize Requirements Output: instruct an LLM to rewrite defective requirements into standardized, verifiable statements using EARS (Easy Approach to Requirements Syntax) or IEEE 29148-style language.
+Critique and Benchmark LLM Audits: evaluate LLM performance quantitatively and qualitatively using precision, recall, false positives, false negatives, and hallucination rate against the manual baseline audit.
+Activity Structure and Workflow
+[ Phase 1: Prompt Strategy Iteration ]  ->  [ Phase 2: System Prompt Optimization ]  ->  [ Phase 3: Benchmarking vs. Human Baseline ]  ->  [ Phase 4: Report and Synthesis ]
+Phase 1: Prompt Engineering Experiments
+Students import the complete requirement set into an LLM context window and evaluate three prompting techniques across the same dataset. The same model/version and requirement set should be used for all three experiments whenever possible so the comparison is meaningful.
+Experiment A - Zero-Shot Prompting
+Task. Direct the LLM to analyze the entire requirements document and report defects without giving it a predefined defect taxonomy, worked examples, or step-by-step analysis rules.
+Goal. Establish a raw baseline of the model's detection capability, blind spots, inconsistent classifications, and false-positive behavior.
+Experiment B - Few-Shot / Exemplar-Guided Prompting
+Task. Supply the LLM with two or three golden examples from the manual audit showing the desired chain from baseline statement -> defect classification -> impact -> EARS rewrite -> verification method.
+Goal. Measure whether examples improve output consistency, classification accuracy, and compliance with the required rewrite syntax.
+Example
+Baseline issue
+Defect classification
+Impact
+EARS-style correction
+Verification
+1
+Contract analysis/drafting combined broad templates, clauses, and several supplier types in one statement.
+Non-atomic / ambiguous scope
+Different developers could implement different subsets; one test cannot prove the whole statement.
+WHEN an authenticated user selects an event agreement type and provides the required parties and event context, THE SYSTEM SHALL generate an editable preliminary contract draft WITH source citations and the mandatory legal disclaimer.
+Functional test using a venue agreement; confirm editable output, citations, and disclaimer.
+2
+"Qdrant, ChromaDB or PostgreSQL" was written inside the requirements section.
+Design decision mixed with requirement / unresolved alternative
+Architecture and estimates can diverge because no implementation baseline is selected.
+WHEN a legal source is indexed, THE SYSTEM SHALL persist its embedding and required source metadata in a vector-capable store WITH metadata-filtered retrieval and source-version deactivation.
+Integration test: index two versions, filter by jurisdiction/status, and confirm obsolete evidence is not returned as current.
+3
+"Protection of data (GDPR / local regulations)" did not define jurisdiction, trigger, or expected system behavior.
+Ambiguity / missing context / unverifiable outcome
+The AI may return generic privacy guidance that is wrong for the selected jurisdiction or date.
+WHEN a user asks about attendee data or image/video consent, THE SYSTEM SHALL identify applicable privacy and consent obligations USING the selected jurisdiction and effective date WITH citations to active sources.
+Scenario test with two jurisdictions/dates; verify distinct cited sources and explicit context.
+
+Experiment C - Chain-of-Thought-Style Multi-Step Reasoning
+Task. Ask the LLM to use a multi-step audit procedure before producing the final judgment. For safe and reproducible use, the prompt should request the model to perform its detailed reasoning internally and return only concise evidence and the structured final result rather than private chain-of-thought.
+Parse structural elements: actor, trigger/condition, action, object, constraints, measurable metrics, and verification target.
+Scan cross-requirement references for contradictions, duplication, incompatible thresholds, or inconsistent terminology.
+Check domain-specific omissions such as error handling, security controls, privacy, data retention, AI governance, source freshness, insufficient-evidence behavior, and prompt-injection protection.
+Phase 2: System Prompt Engineering and Standardization
+The team synthesizes Phase 1 findings into a single production-grade Requirements QA System Prompt. It must enforce a strict output schema, an explicit defect taxonomy, formal requirement syntax, and hallucination controls.
+Strict schema: return a Markdown table or structured JSON with stable field names.
+Defect taxonomy: ambiguity, incompleteness, contradiction, unverifiable metric, missing actor, missing trigger/condition, missing business rule, missing error handling, missing security/privacy detail, duplicate/conflicting requirement, and AI governance gap.
+Syntax guardrails: corrected requirements use formal syntax such as WHEN [trigger], THE SYSTEM SHALL [action] WITH [metric/constraint].
+Hallucination control: do not invent defects, laws, thresholds, actors, citations, or business rules. If evidence is insufficient, state that explicitly.
+Final Production-Grade QA System Prompt
+ROLE
+You are a Software Requirements QA Auditor for a web-based AI legal-support system. Your task is to audit requirements, not to redesign the product unless a defect requires a minimal correction.
+
+GROUND TRUTH RULES
+- Use only the supplied requirements and project context.
+- Preserve every requirement ID.
+- Do not invent laws, thresholds, actors, citations, interfaces, or business rules.
+- A well-formed requirement must be marked COMPLIANT; never manufacture a defect to fill the table.
+- If two requirements conflict, cite both IDs.
+
+DEFECT TAXONOMY
+AMBIGUITY; INCOMPLETENESS; CONTRADICTION; NON_ATOMIC; UNVERIFIABLE; MISSING_ACTOR; MISSING_TRIGGER; MISSING_BUSINESS_RULE; MISSING_ERROR_HANDLING; SECURITY_GAP; PRIVACY_GAP; DATA_GAP; AI_GOVERNANCE_GAP; DUPLICATION; DESIGN_MIXED_WITH_REQUIREMENT.
+
+AUDIT PROCEDURE
+1. Inspect each requirement for actor, trigger/condition, system action, object, constraints, measurable criteria, and verification target.
+2. Compare related requirements for contradictions, duplicate behavior, inconsistent terminology, and incompatible thresholds.
+3. Check functional, non-functional, data, security/privacy, error-handling, RAG/AI, governance, and auditability concerns.
+4. Decide COMPLIANT or DEFECTIVE. Perform detailed reasoning internally and output only concise evidence and final findings.
+
+REWRITE RULES
+- Rewrite only defective requirements.
+- Prefer EARS syntax: WHEN [trigger], THE SYSTEM SHALL [action] WITH [measurable constraint].
+- Keep the original intent and scope.
+- Separate unrelated behaviors into separate requirements if atomicity is violated.
+
+OUTPUT SCHEMA (Markdown table)
+ID | Status | Defect Category | Evidence | Impact | Corrected EARS Requirement | Verification Method | Related IDs
+
+VERIFICATION METHOD VALUES
+Functional Test; Integration Test; Security Test; Performance Test; Accessibility Test; Data/Privacy Test; AI/RAG Evaluation; Inspection/Review.
+
+FINAL CHECK
+Before returning the table, verify that every input requirement appears exactly once as a primary row, all cited related IDs exist, and no claim is unsupported by the supplied text.
+
+Phase 3: Benchmarking Against Ground Truth
+Ground truth for this project. The manual audit and the corrected specification in Sections 2 through 6 are used as the human baseline. The baseline version contained broad, non-atomic functional statements, unclear jurisdiction/testability, architecture alternatives mixed with requirements, and missing security/privacy/AI-governance controls. The audited version records the corrections and their acceptance criteria.
+Baseline item
+Manual defect classification
+Impact
+Corrected location
+Verification anchor
+Contract analysis and drafting statement
+Non-atomic / ambiguous scope
+Incomplete implementation or one test masking missing sub-functions
+FR-07 to FR-10
+AC-05, AC-06
+Permits and local compliance statement
+Ambiguity / missing jurisdiction and testability
+Generic or incorrect local guidance
+FR-04, FR-12, FR-15; BR-03
+AC-04, AC-07, AC-08
+Data protection statement
+Ambiguity / missing operational behavior
+Privacy guidance may not match jurisdiction/date
+FR-14; NFR-12; BR-09
+AC-07, AC-12, AC-24
+Disclaimer statement
+Incomplete placement/enforcement rule
+Generated output could be used without warning
+FR-20; BR-02; BR-07
+AC-06
+Vector DB alternatives listed as requirement
+Design mixed with requirement / unresolved alternative
+Architecture, effort, and tests can diverge
+Section 3 architecture baseline
+Architecture integration test
+Chunking range stated without evaluation gate
+Unverifiable design parameter
+Retrieval quality may be assumed rather than measured
+Section 3 + AI-10
+AC-23
+Missing security and AI governance controls
+Incompleteness / security and governance gaps
+Data leakage, unsafe files, prompt injection, unsupported legal claims
+NFR-05 to NFR-17; AI-01 to AI-10
+AC-16 to AC-24
+
+Metrics. Use the manual baseline as ground truth and calculate the following after each experiment. A finding counts as a true positive only when the LLM flags a defect supported by the baseline or by a defensible manual review that is then added to the ground truth.
+Precision = TP / (TP + FP). It answers: of all defects reported by the LLM, how many were valid?
+Recall = TP / (TP + FN). It answers: of all known defects, how many did the LLM detect?
+Hallucination rate = Unsupported defect claims / Total LLM defect claims. Report unsupported invented laws, thresholds, requirements, or contradictions separately.
+
+
+Prompt strategy
+TP
+FP
+FN
+Precision
+Recall
+Hallucination rate
+Notes / failure modes
+Zero-Shot
+TBD
+TBD
+TBD
+TBD
+TBD
+TBD
+Complete after executing Experiment A.
+Few-Shot
+TBD
+TBD
+TBD
+TBD
+TBD
+TBD
+Complete after executing Experiment B.
+Multi-Step / CoT-style
+TBD
+TBD
+TBD
+TBD
+TBD
+TBD
+Complete after executing Experiment C.
+Final System Prompt
+TBD
+TBD
+TBD
+TBD
+TBD
+TBD
+Use as the optimized production benchmark.
+
+Important evidence rule. Numeric benchmark values are intentionally left as TBD until the prompts are actually executed and their raw outputs are compared with the human baseline. Do not invent precision, recall, or hallucination values.
+Category
+Questions for category breakdown
+Ambiguity / atomicity
+Did the LLM find vague terms, broad combined behaviors, missing actors, or missing triggers?
+Contradictions / cross-references
+Did it identify incompatible requirements or only inspect items individually?
+Security / privacy
+Did it detect authorization, encryption, retention, file-security, secrets, and training-consent gaps without inventing controls?
+AI/RAG governance
+Did it find unsupported citation behavior, stale sources, conflicting evidence, prompt injection, traceability, and insufficient-evidence risks?
+Non-functional measurability
+Did it convert subjective performance/accessibility/availability language into verifiable targets without inventing business thresholds?
+
+Phase 4: Report and Synthesis
+The final report must explain what changed across the prompt iterations and why. It should not only report metrics; it should identify failure modes, examples of useful LLM findings, examples of false positives or hallucinations, and limitations of using an LLM as a QA auditor.
+Compare Zero-Shot, Few-Shot, Multi-Step/CoT-style, and Final System Prompt results.
+Explain which prompt changes improved consistency, recall, precision, or output structure.
+Discuss categories where the LLM performed well and categories where human review remained necessary.
+Identify any valid defect found by the LLM that was absent from the manual baseline; manually verify it before updating ground truth.
+Conclude whether the final prompt is suitable as an assistant for requirements QA, while keeping human approval as the final gate for high-impact changes.
+Required Student Deliverables
+Each team must submit an LLM Requirements QA Audit Package containing the following three deliverables. The current document already provides the corrected requirement specification, human baseline, traceability, acceptance criteria, and prompt templates; raw experiment outputs and measured benchmark values must be added after execution.
+Deliverable
+Content and Format
+1. Prompt Engineering Repository
+Complete copy of all prompt iterations (Zero-Shot, Few-Shot, Multi-Step/CoT-style, and Final System Prompt) plus notes explaining what changed and why. Preserve raw LLM outputs, model/version, and execution date.
+2. Automated Requirement Audit Register
+Final audit output produced by the optimized system prompt, including requirement ID, compliance status, defect classification, evidence, impact, EARS rewrite when needed, verification method, and related requirement IDs. The corrected requirements in Sections 2-5 remain the approved specification.
+3. Human vs. LLM Performance Report
+Comparative report against the manual baseline, including TP, FP, FN, precision, recall, hallucination rate, category breakdown, and analysis of false positives, false negatives, and other failure modes.
+
+

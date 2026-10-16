@@ -1,0 +1,71 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor #526E87
+skinparam activityBackgroundColor #EAF3FA
+skinparam activityBorderColor #526E87
+skinparam activityDiamondBackgroundColor #FFF4D6
+skinparam activityDiamondBorderColor #B69B5C
+skinparam noteBackgroundColor #FFF4D6
+title
+D10 · Navegación y recorridos
+Pantallas UI01–UI07 · flujos de §7 · decisiones y recuperación
+end title
+start
+:UI01 · Acceso\nRegistro / recuperación / inicio de sesión;
+if (Operación administrativa) then (Sí)
+  :UI01 · Completar alta o verificación MFA\nAntes de habilitar la sesión administrativa;
+  :UI06 · Fuentes\nNueva fuente o nueva versión;
+  while (Metadatos e ingesta válidos) is (No)
+    :Corregir y reintentar\nConservar la versión publicada;
+  endwhile (Sí)
+  :Activar versión y comprobar recuperación\nActualizar o retirar cuando corresponda;
+  :Revisar reportes compartidos\ny registrar resolución;
+else (Usuario)
+  :UI02 · Elegir expediente / contexto\nNavegar a consulta, documentos, borradores o cuenta;
+  switch (Destino)
+  case (Consulta · UI03)
+    :Seleccionar documentos propios opcionales\ny enviar pregunta;
+    while (Contexto completo) is (No)
+      :Completar jurisdicción, fecha, materia\ny datos del evento requeridos;
+    endwhile (Sí)
+    :Consultar estado de generación\nLeer respuesta o abstención;
+    :Revisar citas, pasajes y limitaciones;
+    :UI05 · Preparar / editar resumen y exportar\no compartir reporte de respuesta;
+  case (Documentos · UI04)
+    :Cargar PDF / DOCX / TXT\nValidar seguridad y extraer texto;
+    while (Documento seguro y texto disponible) is (No)
+      :Mostrar causa del rechazo / error\nSolicitar versión legible si falta OCR;
+      :Corregir archivo y volver a cargar;
+    endwhile (Sí)
+    :Solicitar análisis y consultar progreso;
+    :Revisar cláusulas, obligaciones y riesgos\nAbrir pasaje de origen de cada hallazgo;
+  case (Borradores · UI05)
+    :Seleccionar tipo de acuerdo\nCompletar partes, condiciones y contexto;
+    :Generar y revisar fuentes, límites\ny campos pendientes;
+    :Editar y guardar versión\nResolver conflicto si cambió la revisión;
+    :Exportar archivo editable\npara revisión profesional;
+  case (Privacidad · UI07 / UI04)
+    :Revisar política, solicitudes y sesiones\nRevocar sesiones propias si procede;
+    if (Operación) then (Exportar datos)
+      :Solicitar exportación de cuenta\nConsultar progreso y descargar si disponible;
+    else (Eliminar documento / cuenta)
+      :Ver consecuencias y confirmar\nCuenta: reautenticar; ADMIN también MFA;
+      :Excluir inmediatamente contenido\ny resultados / exportaciones dependientes;
+      while (Purga finalizada) is (No)
+        :Consultar progreso o fallo recuperable\nMantener exclusión y reintento controlado;
+      endwhile (Sí)
+      :Consultar resultado\nCuenta: comprobante tras revocar sesiones;
+    endif
+  endswitch
+endif
+:Volver a inicio autorizado o salir\nCuenta eliminada: únicamente seguimiento limitado;
+stop
+legend bottom
+Diseño de navegación: cada decisión dirige a un recorrido; las ramas no son tareas paralelas.
+Los fallos muestran causa y acción recuperable. Las respuestas y borradores requieren revisión profesional.
+Acceso a información privada sujeto a propiedad; rol administrador no habilita lectura general de expedientes.
+endlegend
+@enduml

@@ -1,0 +1,60 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam ParticipantBackgroundColor #EAF3FA
+skinparam LifeLineBorderColor #9BAFBE
+skinparam noteBackgroundColor #FFF4D6
+autonumber
+title D06 · Carga e ingesta segura de documentos\nFR-05, FR-06 · NFR-08, NFR-09, NFR-15 · BR-08 · AC-03
+actor "Usuario" as U
+boundary "UI04 · Documentos" as UI
+control "M03 · Documentos" as API
+database "PostgreSQL\ndocuments / jobs / chunks" as DB
+collections "Objetos privados" as OBJ
+control "Worker de ingesta" as W
+control "Extracción aislada\n+ embeddings local" as PIPE
+U -> UI : Seleccionar PDF / DOCX / TXT y expediente
+UI -> API : POST /api/v1/documents\nmultipart + case_id + CSRF
+API -> DB : Validar sesión, propietario y estado del expediente
+API -> API : Validar tamaño, extensión, MIME y firma
+alt Archivo inválido o acceso denegado
+  API --> UI : 413 / 415 / 403 · error recuperable
+else Archivo aceptado para inspección
+  API -> OBJ : Guardar en cuarentena no pública
+  API -> DB : TX: documento PENDING / QUARANTINED + generation\ny job INGEST PENDING; COMMIT
+  note right of DB
+    Si falla la transacción, limpiar objeto huérfano.
+    Aún no hay texto ni vectores recuperables.
+  end note
+  API --> UI : 202 · document_id + estado + URL de consulta
+  W -> DB : Reclamar job PENDING con lease\nvalidar generation / propietario / estado
+  DB --> W : Job / ingesta RUNNING + documento permitido
+  W -> OBJ : Leer cuarentena
+  W -> PIPE : Escaneo / aislamiento y límites de ejecución
+  alt Archivo inseguro o ilegible
+    PIPE --> W : Rechazo o fallo controlado
+    W -> DB : Seguridad REJECTED o extracción fallida\ningesta / job FAILED + auditoría sin contenido
+  else Archivo seguro
+    W -> PIPE : Extraer texto; OCR si PDF sin texto útil
+    PIPE --> W : Texto y localizadores de página / cláusula
+    W -> PIPE : Limpiar; fragmentar por estructura legal\nEmbeddingGemma local
+    PIPE --> W : Chunks + embeddings + metadatos
+    W -> DB : TX: bloquear documento; revalidar generation\ny estado antes de publicar derivados
+    alt Borrado / generation cambió
+      W -> DB : Descartar resultados; job CANCELLED
+    else Documento sigue autorizado
+      W -> DB : Insertar chunks + vectores + permisos\nSeguridad SAFE; ingesta / job SUCCEEDED; COMMIT
+    end
+  end
+  UI -> API : GET /api/v1/documents/{id}
+  API -> DB : Leer estado con filtro de propietario y borrado
+  API --> UI : 200 · estado / errores / metadatos
+end
+note over UI,PIPE
+OCR es Should; si se habilita, debe evaluarse. Ingesta SUCCEEDED exige texto útil.
+No se ejecutan macros, enlaces ni instrucciones embebidas; los objetos carecen de URL pública.
+end note
+@enduml

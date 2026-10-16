@@ -1,0 +1,57 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam componentStyle rectangle
+skinparam ArrowColor #375875
+skinparam rectangleBorderColor #375875
+skinparam componentBackgroundColor #EAF3FA
+skinparam databaseBackgroundColor #E7F4EE
+skinparam noteBackgroundColor #FFF4D6
+top to bottom direction
+title D01 · Arquitectura de la solución\nApoyo jurídico preliminar para organización de eventos
+actor "Usuario\norganizador / revisor" as U
+actor "Administrador\nfuentes / operación" as A
+rectangle "Navegador" {
+  component "React + TypeScript\nUI01–UI07 · interfaz adaptable" as WEB
+}
+rectangle "Plataforma privada · monolito modular" {
+  component "Proxy HTTPS\nTLS · estáticos · límites" as PROXY
+  component "FastAPI · /api/v1\nSesión, autorización y módulos M01–M08" as API
+  component "Workers asíncronos\nIngesta · RAG · análisis · exportación · purga" as WORK
+  component "EmbeddingGemma local\nAdaptador de embeddings" as EMB
+  database "PostgreSQL + pgvector\nDatos · permisos · vectores · jobs · auditoría" as PG
+  storage "Objetos privados\nCuarentena · originales · exportaciones" as OBJ
+}
+cloud "Correo transaccional\nProveedor por seleccionar" as MAIL
+cloud "Modelo generativo\nLLM / proveedor por seleccionar" as LLM
+U --> WEB
+A --> WEB
+WEB --> PROXY : HTTPS · mismo origen
+PROXY --> API : REST JSON / multipart\nred interna
+API --> PG : SQL parametrizado\ntransacciones + jobs
+WORK --> PG : reclamar jobs\nSKIP LOCKED + leases
+API --> OBJ : carga / descarga\nprevia autorización
+WORK --> OBJ : lectura y purga
+WORK --> EMB : inferencia local
+API --> MAIL : API HTTPS\nrecuperación de acceso
+WORK --> LLM : adaptador configurable\ncontexto mínimo autorizado
+note bottom of LLM
+Uso externo sujeto a privacidad y evaluación.
+No se entrena con contenido privado sin consentimiento separado.
+Fuentes y documentos son datos no confiables, nunca instrucciones.
+end note
+note bottom of PG
+Autorización por propietario y rol en API y workers.
+Administrador no tiene acceso general a documentos ajenos.
+Texto, vectores y objetos excluidos tras borrado lógico.
+end note
+legend bottom
+M01 Identidad · M02 Expedientes/contexto · M03 Documentos · M04 Consulta RAG/feedback
+M05 Análisis/borradores · M06 Fuentes · M07 Privacidad/exportación · M08 Auditoría/evaluación
+Base: FR-01–FR-20 · NFR-05–NFR-12 · NFR-15–NFR-17 · AI-01–AI-10
+Decisión: piloto con Docker Compose en VM privada; la disponibilidad de producción requiere validación.
+endlegend
+@enduml

@@ -1,0 +1,98 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #526E87
+skinparam entityBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+skinparam nodesep 50
+skinparam ranksep 55
+top to bottom direction
+
+' Generado desde §9 por scripts/generar_modelo_er.py; editar el Mermaid de origen.
+title
+D09b · Expedientes, conversación y reportes
+Claves y cardinalidades · diccionario completo en §8
+end title
+entity "users" as users {
+  id : uuid <<PK>>
+  email : text <<UK>>
+  password_hash : text
+  role : text
+  status : text
+}
+entity "cases" as cases {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  country : text
+  region : text
+  relevant_date : date
+  event_context : jsonb
+}
+entity "documents" as documents {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK>>
+  object_key : text
+  ingestion_state : text
+  security_state : text
+}
+entity "conversations" as conversations {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  title : text
+}
+entity "messages" as messages {
+  id : uuid <<PK>>
+  conversation_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  run_id : uuid <<FK,UK>>
+  role : text
+  body : text
+}
+entity "ai_runs" as ai_runs {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  input_message_id : uuid <<FK>>
+  state : text
+  model_version : text
+  prompt_version : text
+  retrieval_parameters : jsonb
+}
+entity "feedback" as feedback {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  message_id : uuid <<FK>>
+  category : text
+  shared_excerpt : text
+  excerpt_start : integer
+  excerpt_end : integer
+  shared_at : timestamptz
+  status : text
+  reviewed_by : uuid <<FK>>
+  reviewed_at : timestamptz
+  resolution_note : text
+}
+users ||--o{ cases : posee
+users ||--o{ feedback : reporta
+users |o--o{ feedback : revisa
+cases ||--o{ documents : organiza
+cases ||--o{ conversations : conserva
+cases ||--o{ ai_runs : contextualiza
+conversations ||--o{ messages : contiene
+messages |o--o{ ai_runs : pregunta
+ai_runs |o--o| messages : responde
+messages ||--o{ feedback : recibe
+legend bottom
+PK = primaria · FK = foránea · UK = única · o = opcional · | = uno · { = varios
+Atributos estructurales; obligatoriedad, enums, índices y restricciones completos en §8.
+Vista parcial: las tablas repetidas designan las mismas entidades; todas las relaciones figuran en D09.
+messages.run_id es opcional para USER y obligatorio para ASSISTANT; feedback solo comparte el fragmento elegido.
+endlegend
+@enduml

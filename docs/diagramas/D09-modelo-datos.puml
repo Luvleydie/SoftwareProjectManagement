@@ -1,0 +1,281 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #526E87
+skinparam entityBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+skinparam nodesep 50
+skinparam ranksep 55
+top to bottom direction
+
+' Generado desde §9 por scripts/generar_modelo_er.py; editar el Mermaid de origen.
+title
+D09 · Modelo entidad-relación completo
+Claves y cardinalidades · diccionario completo en §8
+end title
+entity "users" as users {
+  id : uuid <<PK>>
+  email : text <<UK>>
+  password_hash : text
+  role : text
+  status : text
+}
+entity "sessions" as sessions {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  csrf_hash : text
+  expires_at : timestamptz
+  last_seen_at : timestamptz
+  reauthenticated_at : timestamptz
+}
+entity "password_reset_tokens" as password_reset_tokens {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  consumed_at : timestamptz
+}
+entity "mfa_credentials" as mfa_credentials {
+  id : uuid <<PK>>
+  user_id : uuid <<FK,UK>>
+  secret_ciphertext : text
+  enrollment_required : boolean
+  last_used_step : bigint
+}
+entity "mfa_challenges" as mfa_challenges {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  purpose : text
+  pending_secret_ciphertext : text
+}
+entity "mfa_recovery_codes" as mfa_recovery_codes {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  consumed_at : timestamptz
+}
+entity "cases" as cases {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  country : text
+  region : text
+  relevant_date : date
+  event_context : jsonb
+}
+entity "artifacts" as artifacts {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  kind : text
+  state : text
+  generation : integer
+  delete_after : timestamptz
+}
+entity "artifact_dependencies" as artifact_dependencies {
+  parent_id : uuid <<PK,FK>>
+  child_id : uuid <<PK,FK>>
+}
+entity "documents" as documents {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK>>
+  object_key : text
+  ingestion_state : text
+  security_state : text
+}
+entity "conversations" as conversations {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  title : text
+}
+entity "messages" as messages {
+  id : uuid <<PK>>
+  conversation_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  run_id : uuid <<FK,UK>>
+  role : text
+  body : text
+}
+entity "legal_sources" as legal_sources {
+  id : uuid <<PK>>
+  title : text
+  canonical_url : text
+  country : text
+  status : text
+}
+entity "source_versions" as source_versions {
+  id : uuid <<PK>>
+  source_id : uuid <<FK>>
+  job_id : uuid <<FK>>
+  version_label : text
+  effective_from : date
+  effective_to : date
+  status : text
+  ingestion_state : text
+}
+entity "chunks" as chunks {
+  id : uuid <<PK>>
+  document_id : uuid <<FK>>
+  source_version_id : uuid <<FK>>
+  ordinal : integer
+  locator : jsonb
+  text : text
+  embedding : vector
+  active : boolean
+}
+entity "ai_runs" as ai_runs {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  input_message_id : uuid <<FK>>
+  state : text
+  model_version : text
+  prompt_version : text
+  retrieval_parameters : jsonb
+}
+entity "retrieved_evidence" as retrieved_evidence {
+  run_id : uuid <<PK,FK>>
+  chunk_id : uuid <<PK,FK>>
+  rank : integer
+  score : float
+}
+entity "citations" as citations {
+  id : uuid <<PK>>
+  run_id : uuid <<FK>>
+  chunk_id : uuid <<FK>>
+  claim_locator : text
+  passage_start : integer
+  passage_end : integer
+}
+entity "analyses" as analyses {
+  id : uuid <<PK>>
+  document_id : uuid <<FK>>
+  run_id : uuid <<FK,UK>>
+  artifact_id : uuid <<FK,UK>>
+  findings : jsonb
+}
+entity "drafts" as drafts {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  conversation_id : uuid <<FK>>
+  run_id : uuid <<FK,UK>>
+  artifact_id : uuid <<FK,UK>>
+  output_type : text
+  body : text
+  revision : integer
+}
+entity "feedback" as feedback {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  message_id : uuid <<FK>>
+  category : text
+  shared_excerpt : text
+  excerpt_start : integer
+  excerpt_end : integer
+  shared_at : timestamptz
+  status : text
+  reviewed_by : uuid <<FK>>
+  reviewed_at : timestamptz
+  resolution_note : text
+}
+entity "privacy_requests" as privacy_requests {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  job_id : uuid <<FK,UK>>
+  kind : text
+  state : text
+  receipt_hash : text <<UK>>
+  receipt_expires_at : timestamptz
+}
+entity "exports" as exports {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  origin_kind : text
+  conversation_id : uuid <<FK>>
+  draft_id : uuid <<FK>>
+  draft_revision : integer
+  privacy_request_id : uuid <<FK>>
+  state : text
+  object_key : text
+}
+entity "jobs" as jobs {
+  id : uuid <<PK>>
+  requested_by : uuid <<FK>>
+  kind : text
+  state : text
+  input_refs : jsonb
+  observed_generations : jsonb
+  lease_token : uuid
+  lease_until : timestamptz
+}
+entity "audit_events" as audit_events {
+  id : uuid <<PK>>
+  actor_id : uuid <<FK>>
+  action : text
+  target_id : uuid
+  request_id : uuid
+}
+users ||--o{ sessions : autentica
+users ||--o{ password_reset_tokens : recupera
+users ||--o| mfa_credentials : configura
+users ||--o{ mfa_challenges : verifica
+users ||--o{ mfa_recovery_codes : recupera_mfa
+users ||--o{ cases : posee
+users ||--o{ artifacts : controla
+users ||--o{ feedback : reporta
+users |o--o{ feedback : revisa
+users ||--o{ privacy_requests : solicita
+users ||--o{ exports : descarga
+users |o--o{ jobs : solicita
+users |o--o{ audit_events : actua
+artifacts ||--o{ artifact_dependencies : entrada
+artifacts ||--o{ artifact_dependencies : derivado
+artifacts ||--o| documents : representa
+artifacts ||--o| messages : representa
+artifacts ||--o| ai_runs : representa
+artifacts ||--o| analyses : representa
+artifacts ||--o| drafts : representa
+artifacts ||--o| exports : representa
+cases ||--o{ documents : organiza
+cases ||--o{ conversations : conserva
+cases ||--o{ ai_runs : contextualiza
+cases ||--o{ drafts : contiene
+conversations ||--o{ messages : contiene
+conversations |o--o{ drafts : fundamenta
+conversations |o--o{ exports : resume
+messages |o--o{ ai_runs : pregunta
+ai_runs |o--o| messages : responde
+messages ||--o{ feedback : recibe
+legal_sources ||--o{ source_versions : versiona
+documents |o--o{ chunks : origen_privado
+source_versions |o--o{ chunks : origen_oficial
+ai_runs ||--o{ retrieved_evidence : recupera
+chunks ||--o{ retrieved_evidence : evidencia
+retrieved_evidence ||--o{ citations : respalda
+documents ||--o{ analyses : analiza
+ai_runs ||--o| analyses : produce
+ai_runs ||--o| drafts : produce
+drafts |o--o{ exports : version_editable
+privacy_requests |o--o{ exports : exporta
+jobs ||--o{ documents : ingiere
+jobs ||--o{ source_versions : indexa
+jobs ||--o| ai_runs : ejecuta
+jobs ||--o| privacy_requests : procesa
+jobs ||--o| exports : construye
+legend bottom
+PK = primaria · FK = foránea · UK = única · o = opcional · | = uno · { = varios
+Atributos estructurales; obligatoriedad, enums, índices y restricciones completos en §8.
+chunks: exactamente un origen, document_id o source_version_id.
+exports.origin_kind: CONVERSATION_SUMMARY = conversation_id + draft_id; DRAFT = solo draft_id; ACCOUNT = solo privacy_request_id.
+citations(run_id,chunk_id) referencia el par efectivamente recuperado en retrieved_evidence.
+artifacts.kind exige un subtipo compatible; artifact_dependencies es un DAG del mismo propietario.
+endlegend
+@enduml

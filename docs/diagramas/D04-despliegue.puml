@@ -1,0 +1,62 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam nodeBackgroundColor #EAF3FA
+skinparam databaseBackgroundColor #E7F4EE
+skinparam noteBackgroundColor #FFF4D6
+top to bottom direction
+title D04 · Despliegue propuesto del piloto\nDocker Compose en VM privada · sin publicación en esta entrega
+node "Dispositivo del usuario" {
+  artifact "Navegador\nReact + TypeScript" as BROWSER
+}
+node "VM piloto · acceso restringido" as VM {
+  node "Proxy HTTPS\núnico puerto de aplicación expuesto: 443" as PROXY {
+    artifact "TLS + estáticos React" as STATIC
+  }
+  node "Red interna Docker" {
+    node "Contenedor API\nFastAPI" as API
+    node "Contenedor worker\nCPU / memoria limitadas" as WORK
+    node "Contenedor embeddings\nEmbeddingGemma local" as EMB
+    database "PostgreSQL + pgvector\nsin puerto público" as PG
+  }
+  storage "Volúmenes persistentes cifrados\nPG · objetos privados · cuarentena" as VOL
+  artifact "Secretos montados en ejecución\nfuera del repositorio" as SEC
+}
+cloud "Servicios externos permitidos" {
+  node "Correo transaccional" as MAIL
+  node "LLM por seleccionar\nhabilitación sujeta a privacidad" as LLM
+}
+storage "Repositorio de copias cifradas\nseparado de la VM" as BACKUP
+BROWSER --> PROXY : HTTPS 443
+PROXY --> API : HTTP interno\nmismo host aislado
+API --> PG : SQL · rol restringido
+WORK --> PG : SQL · jobs / leases
+WORK --> EMB : red interna
+PG --> VOL : datos
+API --> VOL : originales / descargas
+WORK --> VOL : ingesta / exportación / purga
+SEC ..> API
+SEC ..> WORK
+API --> MAIL : HTTPS saliente
+WORK --> LLM : HTTPS saliente\nsolo si autorizado
+VOL --> BACKUP : copia programada\n+ metadatos de fuentes
+note bottom of VM
+Firewall: acceso de usuarios solo a 443; administración restringida.
+Cifrado del disco/volúmenes y control de acceso del host.
+Extracción de archivos aislada; límites de tamaño, CPU y tiempo.
+Registros con redacción de datos; métricas de latencia y fallos.
+end note
+note bottom of BACKUP
+Restauración documentada antes de producción (NFR-16).
+Aplicar tombstones de borrado antes de reabrir una restauración.
+Retención y ventanas de recuperación: decisiones por ratificar.
+end note
+legend bottom
+FR-01–FR-20 · NFR-04–NFR-11 · NFR-15–NFR-17
+Una sola VM es un punto de fallo: este piloto no demuestra por sí mismo 99% de disponibilidad mensual.
+endlegend
+@enduml

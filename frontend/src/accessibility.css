@@ -1,0 +1,62 @@
+/* Shared contrast corrections, verified with axe on the working surfaces. */
+:root {
+  --muted: #60707c;
+}
+.breadcrumb {
+  color: #626f7a;
+}
+.eyebrow {
+  color: #78624f;
+}
+.text-button {
+  color: #586c7b;
+}
+.blue {
+  color: #4c687e;
+}
+.amber {
+  color: #825b20;
+}
+.demo-caption,
+.page-footer,
+.case-description > span,
+.checklist-item p,
+.stat-card > span {
+  color: #5c6e7b;
+}
+.checklist-item > span {
+  color: #546977;
+}
+.event-meta span,
+.event-context,
+.event-counts,
+.document-title span,
+.draft-excerpt,
+.history-list small,
+.sources-intro p,
+.info-grid p,
+.consultation-welcome p,
+.settings-row p,
+.editor-meta,
+.citation-origin,
+.citations summary > span:last-child,
+.auth-form > p,
+.question-bubble > span {
+  color: #586c7b;
+}
+.composer textarea::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #677784;
+  opacity: 1;
+}
+.sources-intro .status {
+  color: #825b20;
+}
+.next-step-card .eyebrow {
+  color: #d5bd9f;
+}
+@media (max-width: 760px) {
+  .sidebar { display: none; }
+  .sidebar.is-open { display: flex; transform: none; }
+}

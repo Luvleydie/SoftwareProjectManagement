@@ -1,0 +1,66 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam ParticipantBackgroundColor #EAF3FA
+skinparam LifeLineBorderColor #9BAFBE
+skinparam noteBackgroundColor #FFF4D6
+autonumber
+title D07 · Consulta RAG con evidencia y control de publicación\nFR-03, FR-04, FR-15, FR-20 · BR-01, BR-03–BR-06 · AI-01–AI-08 · AC-22/AC-23
+actor "Usuario" as U
+boundary "UI03 · Consulta" as UI
+control "M04 · API de consulta" as API
+database "PostgreSQL + pgvector" as DB
+control "Worker RAG" as W
+control "EmbeddingGemma\nlocal" as EMB
+control "Adaptador LLM\npor seleccionar" as LLM
+U -> UI : Pregunta + expediente + jurisdicción + fecha
+UI -> API : POST /api/v1/conversations/{id}/messages
+API -> DB : Verificar sesión, propietario y expediente activo
+API -> API : Validar contexto y límite de solicitudes
+alt Falta contexto obligatorio
+  API --> UI : 422 · solicitar jurisdicción / fecha / materia
+else Contexto completo
+  API -> DB : TX: mensaje + ai_run PENDING + job PENDING\npropietario y generation; COMMIT
+  API --> UI : 202 · run_id + job_id + URL de estado
+  W -> DB : Reclamar job; revalidar acceso / generation\nai_run RUNNING
+  W -> W : Comprobar ámbito de organización de eventos
+  alt Fuera del ámbito soportado
+    W -> DB : TX: revalidar generation; guardar OUT_OF_SCOPE\ny aviso; ai_run / job SUCCEEDED
+  else Dentro del ámbito
+    W -> EMB : Vectorizar pregunta minimizada
+    EMB --> W : Vector de consulta
+    W -> DB : Recuperar con filtros: propietario / acceso, activos,\njurisdicción, vigencia a fecha y tipo / autoridad
+    DB --> W : Chunks + localizadores + versiones + metadatos
+    W -> DB : Guardar retrieved_evidence + trazabilidad en ai_run\n(modelo / prompt / filtros / parámetros / fecha)
+    W -> W : Evaluar suficiencia, vigencia y conflictos
+    alt Evidencia insuficiente o irrelevante
+      W -> W : Construir abstención / petición de contexto\nsin afirmaciones legales inventadas
+    else Evidencia suficiente
+      W -> LLM : Pregunta + contexto mínimo + evidencia delimitada\nreglas de citas, conflicto y aviso legal
+      note over W,LLM
+        Solo si configuración y privacidad permiten el modelo.
+        Texto recuperado es dato no confiable; no permite ejecutar herramientas.
+      end note
+      LLM --> W : Respuesta estructurada + referencias a evidencia
+      W -> W : Validar citas solo del conjunto recuperado\nmostrar conflictos; rechazar citas fabricadas
+    end
+    W -> DB : TX: revalidar generation, permisos y estado\nde documentos / versiones antes de publicar
+    alt Evidencia invalidada durante la generación
+      W -> DB : ai_run INVALIDATED; job CANCELLED\nno publicar contenido derivado
+    else Evidencia y acceso siguen vigentes
+      W -> DB : Guardar mensaje + citas + trazabilidad\nai_run SUCCEEDED; job SUCCEEDED; COMMIT
+    end
+  end
+  UI -> API : GET /api/v1/jobs/{job_id}\nconsulta periódica de estado / resultado
+  API -> DB : Autorizar y excluir resultados invalidados
+  API --> UI : 200 · estado, respuesta o fallo explícito
+  UI --> U : Jurisdicción + fecha + evidencia / citas\nlimitaciones + revisión profesional + aviso
+end
+note over API,LLM
+Fallo/timeout del modelo: FAILED y mensaje recuperable; reintentos acotados e idempotentes.
+NFR-03 mide inicio de contenido de respuesta, no la mera recepción HTTP 202.
+end note
+@enduml

@@ -1,0 +1,100 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #526E87
+skinparam entityBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+skinparam nodesep 50
+skinparam ranksep 55
+top to bottom direction
+
+' Generado desde §9 por scripts/generar_modelo_er.py; editar el Mermaid de origen.
+title
+D09d · Borradores, exportaciones y privacidad
+Claves y cardinalidades · diccionario completo en §8
+end title
+entity "users" as users {
+  id : uuid <<PK>>
+  email : text <<UK>>
+  password_hash : text
+  role : text
+  status : text
+}
+entity "cases" as cases {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  country : text
+  region : text
+  relevant_date : date
+  event_context : jsonb
+}
+entity "conversations" as conversations {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  title : text
+}
+entity "ai_runs" as ai_runs {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  input_message_id : uuid <<FK>>
+  state : text
+  model_version : text
+  prompt_version : text
+  retrieval_parameters : jsonb
+}
+entity "drafts" as drafts {
+  id : uuid <<PK>>
+  case_id : uuid <<FK>>
+  conversation_id : uuid <<FK>>
+  run_id : uuid <<FK,UK>>
+  artifact_id : uuid <<FK,UK>>
+  output_type : text
+  body : text
+  revision : integer
+}
+entity "privacy_requests" as privacy_requests {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  job_id : uuid <<FK,UK>>
+  kind : text
+  state : text
+  receipt_hash : text <<UK>>
+  receipt_expires_at : timestamptz
+}
+entity "exports" as exports {
+  id : uuid <<PK>>
+  owner_id : uuid <<FK>>
+  artifact_id : uuid <<FK,UK>>
+  job_id : uuid <<FK,UK>>
+  origin_kind : text
+  conversation_id : uuid <<FK>>
+  draft_id : uuid <<FK>>
+  draft_revision : integer
+  privacy_request_id : uuid <<FK>>
+  state : text
+  object_key : text
+}
+users ||--o{ cases : posee
+users ||--o{ privacy_requests : solicita
+users ||--o{ exports : descarga
+cases ||--o{ conversations : conserva
+cases ||--o{ ai_runs : contextualiza
+cases ||--o{ drafts : contiene
+conversations |o--o{ drafts : fundamenta
+conversations |o--o{ exports : resume
+ai_runs ||--o| drafts : produce
+drafts |o--o{ exports : version_editable
+privacy_requests |o--o{ exports : exporta
+legend bottom
+PK = primaria · FK = foránea · UK = única · o = opcional · | = uno · { = varios
+Atributos estructurales; obligatoriedad, enums, índices y restricciones completos en §8.
+Vista parcial: las tablas repetidas designan las mismas entidades; todas las relaciones figuran en D09.
+exports.origin_kind: CONVERSATION_SUMMARY = conversation_id + draft_id; DRAFT = solo draft_id; ACCOUNT = solo privacy_request_id.
+endlegend
+@enduml

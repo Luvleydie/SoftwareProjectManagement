@@ -1,0 +1,492 @@
+1. Activity Purpose
+Once the team has specified and audited the software requirements, the next step is to transform those requirements into a technical and structural design for the proposed solution.
+
+In this activity, students will define how the software solution will be built, including its architecture, technology stack, application components, user interfaces, data structures, database design, integrations, security considerations, and other technical decisions required before implementation begins.
+
+The objective is not to start programming yet. Students must first establish a sufficiently detailed design that allows another development team to understand the proposed solution and begin implementation with minimal ambiguity.
+
+The design must be directly supported by the requirements previously identified.
+
+2. Learning Objectives
+By completing this activity, students will be able to:
+
+Transform software requirements into a coherent technical design.
+Select and justify an appropriate technology stack.
+Define the system's overall software architecture.
+Identify the principal software components and their responsibilities.
+Design the system's data model and database structure.
+Create appropriate UML and architectural diagrams.
+Design initial user interfaces through mockups or prototypes.
+Identify APIs, external services, and system integrations.
+Incorporate security, scalability, performance, accessibility, and maintainability considerations into the design.
+Establish traceability between requirements and design decisions.
+Identify technical risks and unresolved design decisions before implementation.
+Produce a design package that can serve as the technical baseline for the development phase.
+3. Important Principle
+Students should follow this relationship:
+
+Requirements → Design → Implementation → Testing → Deployment
+
+The design must not introduce functionality simply because the team thinks it would be useful.
+
+Every significant design element should be traceable to:
+
+a functional requirement,
+a non-functional requirement,
+a business/user need,
+a technical constraint,
+or a justified architectural decision.
+4. Activity Instructions
+Each team must create a Software Solution Design Document for its project.
+
+The document should contain the following sections.
+
+4.1 Design Introduction
+Briefly describe:
+
+Project name
+Problem being addressed
+Solution being designed
+Design objectives
+Scope of the design
+Relationship with the previously approved requirements
+Students should explicitly identify the version of the requirements specification used as the basis for the design.
+
+5. System Architecture
+Students must define the overall architecture of the solution.
+
+5.1 Architectural Style
+Select and justify an appropriate architecture, for example:
+
+Layered architecture
+Client-server
+MVC
+REST API architecture
+Monolithic architecture
+Modular monolith
+Microservices
+Event-driven architecture
+Serverless
+Hybrid architecture
+The team must explain why the selected architecture is appropriate for its project.
+
+5.2 High-Level Architecture Diagram
+Create a diagram showing, at minimum:
+
+Users/actors
+Frontend/client
+Backend/application
+Database
+External systems/services
+APIs or communication mechanisms
+Major architectural components
+Example:
+
+ 
+Users
+  │
+  ▼
+Web / Mobile Interface
+  │
+  ▼
+Application / API
+  │
+  ├── Authentication
+  ├── Business Logic
+  ├── Notifications
+  ├── Reporting
+  └── AI / Analytics
+  │
+  ▼
+Database
+  │
+  └── External Services
+ 
+The actual architecture must be adapted to each project.
+
+6. Technology Stack
+Students must define the technologies they intend to use.
+
+Create a table such as:
+
+Layer	Technology	Purpose	Justification
+Frontend	React	User interface	Component-based UI
+Backend	Node.js + Express	REST API	Existing team expertise
+Database	PostgreSQL	Persistent data	Relational data requirements
+Authentication	JWT	User authentication	API-based architecture
+Testing	Jest	Automated tests	Unit/integration testing
+Deployment	Render	Application hosting	Suitable deployment environment
+Students should define, when applicable:
+
+Frontend technology
+Backend technology
+Programming languages
+Frameworks
+Database
+Authentication mechanism
+APIs
+Testing technologies
+Version control
+Hosting/deployment platform
+Cloud services
+AI/ML technologies
+External APIs
+Monitoring/logging tools
+Technology Selection Requirement
+For every major technology, students must provide a technical justification.
+
+Avoid statements such as:
+
+"We selected React because it is popular."
+
+Instead:
+
+"React was selected because the solution requires reusable interface components and frequent updates to interactive data views."
+
+7. System Components and Modules
+Identify the major components/modules of the system.
+
+For each component, specify:
+
+Component	Responsibility	Related Requirements	Dependencies
+Authentication	Manage user login and access	FR-01, NFR-SEC-01	User database
+Student Management	Manage student information	FR-05–FR-09	Database
+Alert Management	Generate and manage alerts	FR-15–FR-20	Student data, AI module
+Students should avoid defining modules merely according to programming convenience.
+
+The decomposition should reflect the business and technical responsibilities of the system.
+
+8. UML and System Design Diagrams
+Students should select diagrams according to the characteristics of their project.
+
+At minimum, include:
+
+8.1 Use Case Diagram
+Show:
+
+Actors
+Major system functions
+Relationships between actors and functions
+The use cases should correspond to the requirements.
+
+8.2 Component Diagram
+Show:
+
+Major software components
+Dependencies
+Interfaces
+External systems
+8.3 Deployment Diagram
+Show where the system components will run.
+
+For example:
+
+ 
+User Browser
+     │
+     ▼
+Frontend Server
+     │
+     ▼
+Backend Server
+     │
+     ├────────► Database Server
+     │
+     └────────► External API
+ 
+8.4 Sequence Diagrams
+Create sequence diagrams for at least three critical processes.
+
+For example:
+
+User authentication
+Creating a record
+Generating an alert
+Processing a payment
+Generating a report
+The sequence diagrams should show the interaction between the relevant system components.
+
+9. User Interface Design
+Students must transform functional requirements into preliminary interface designs.
+
+Create mockups or prototypes for the principal screens.
+
+Possible screens include:
+
+Login
+Dashboard
+Main menu
+User management
+Data entry
+Search
+Detail view
+Reports
+Notifications
+Administration
+AI/prediction results
+For each important screen, identify:
+
+Screen purpose
+Main components
+User actions
+Data displayed
+Related requirements
+Recommended tools
+Students may use:
+
+Figma
+Canva
+Draw.io
+Adobe XD
+Penpot
+Other appropriate prototyping tools
+The mockups do not need to be visually final, but they should communicate the intended interaction clearly.
+
+10. Navigation and User Flow
+Define how users move through the application.
+
+Create at least one user flow diagram for each major actor or critical process.
+
+Example:
+
+ 
+Login
+  ↓
+Dashboard
+  ↓
+Student List
+  ↓
+Select Student
+  ↓
+Student Details
+  ↓
+View Risk Indicators
+  ↓
+Generate Intervention
+ 
+This helps connect the UI design with the functional requirements.
+
+11. Data Design
+Students must identify the principal data that the system needs to store and process.
+
+Create a Data Dictionary containing relevant attributes.
+
+Entity	Attribute	Data Type	Required?	Description	Constraints
+Student	student_id	Integer	Yes	Unique identifier	PK
+Student	name	VARCHAR	Yes	Student's name	2–100 chars
+Student	email	VARCHAR	Yes	Institutional email	Unique
+Student	birth_date	DATE	No	Date of birth	Valid date
+The data dictionary should correspond to the requirements.
+
+12. Entity-Relationship Diagram
+Create an ERD representing the database design.
+
+The diagram should include:
+
+Entities/tables
+Attributes
+Primary keys
+Foreign keys
+Relationships
+Cardinalities
+Relevant constraints
+For relational databases, students should consider:
+
+Normalization
+Referential integrity
+Unique constraints
+Required/optional attributes
+Indexes where appropriate
+Example:
+
+ 
+STUDENT
+---------
+PK student_id
+   name
+   email
+   program_id
+        │
+        │ N:1
+        ▼
+PROGRAM
+---------
+PK program_id
+   name
+ 
+13. API Design
+If the project uses an API, students must define its principal endpoints.
+
+Example:
+
+Method	Endpoint	Purpose	Request	Response
+GET	/students	Retrieve students	Query parameters	Student list
+GET	/students/:id	Retrieve student	Student ID	Student
+POST	/students	Create student	JSON	Created student
+PUT	/students/:id	Update student	JSON	Updated student
+DELETE	/students/:id	Delete student	Student ID	Confirmation
+Students should define:
+
+HTTP methods
+Endpoints
+Parameters
+Request body
+Expected response
+Status codes
+Authentication requirements
+Error responses
+14. Security Design
+Security must be considered during design, not after implementation.
+
+Students should identify:
+
+Authentication
+How users authenticate
+Password handling
+Sessions/tokens
+Authorization
+Roles
+Permissions
+Access restrictions
+Data protection
+Sensitive information
+Encryption requirements
+Secure communication
+Application security
+Input validation
+SQL injection prevention
+XSS prevention
+CSRF considerations
+Rate limiting where appropriate
+Privacy
+Identify:
+
+What personal information is collected
+Why it is collected
+Who can access it
+How long it should be retained
+15. Non-Functional Requirements → Design
+Students must explicitly demonstrate how the design addresses important non-functional requirements.
+
+Create a table:
+
+NFR	Requirement	Design Decision	How It Will Be Verified
+Performance	Response < 2 sec	Database indexes + optimized queries	Performance test
+Security	Only authorized users access reports	RBAC	Security test
+Availability	System available during school hours	Cloud deployment + monitoring	Availability monitoring
+Usability	Users complete registration easily	Simplified workflow	Usability test
+This section is particularly important because it prevents students from treating non-functional requirements as merely descriptive statements.
+
+16. AI/ML Design
+For projects containing AI or machine-learning functionality, include a specific AI architecture.
+
+Students should define:
+
+Input data
+Data sources
+Relevant variables/features
+Data preprocessing
+Model
+Training process
+Validation
+Prediction process
+Output
+Integration with the application
+Model update/retraining strategy
+Performance metrics
+Example:
+
+ 
+Student Data
+     ↓
+Data Validation
+     ↓
+Preprocessing
+     ↓
+Feature Extraction
+     ↓
+ML Model
+     ↓
+Risk Prediction
+     ↓
+Backend API
+     ↓
+Dashboard
+ 
+Students must clearly distinguish between:
+
+Data → Model → Prediction → Business/System Action
+
+They should not simply state:
+
+"The system will use AI."
+
+They must explain where AI is located in the architecture and how it interacts with the rest of the system.
+
+17. External Systems and Integrations
+Identify any external services required by the solution.
+
+Examples:
+
+Email services
+Payment gateways
+Institutional systems
+Authentication providers
+Cloud storage
+Mapping services
+AI APIs
+Notification services
+For each integration, document:
+
+External system
+Purpose
+Communication method
+Data exchanged
+Authentication
+Dependencies
+Potential failure scenarios
+18. Error and Exception Design
+Students should identify important failure scenarios before implementation.
+
+Examples:
+
+Invalid credentials
+Missing data
+Duplicate records
+Database unavailable
+API unavailable
+Unauthorized operation
+Invalid file
+Timeout
+AI model unavailable
+For critical scenarios, define:
+
+Condition → System response → User feedback → Recovery strategy
+
+19. Traceability: Requirements → Design
+This is a critical component of the activity.
+
+Students must create a preliminary Requirements-to-Design Traceability Matrix.
+
+Requirement	Architecture Component	UI	Database	API	Diagram
+FR-01	Authentication	Login	User	POST /login	Sequence 01
+FR-02	Student Module	Student Form	Student	POST /students	Sequence 02
+FR-15	Alert Module	Alert Dashboard	Alert	GET /alerts	Sequence 03
+This allows the instructor to verify that the design actually responds to the previously specified requirements.
+
+20. Technical Decisions and Design Rationale
+Students must document important design decisions.
+
+Use a simple Architecture Decision Record (ADR) format:
+
+Decision	Alternatives	Selected Option	Rationale	Consequences
+Database	MySQL / PostgreSQL / MongoDB	PostgreSQL	Relational data and constraints	Requires relational schema
+At least five significant technical decisions should be documented.
+
+21. Technical Risks and Open Questions
+Before development begins, students must identify unresolved technical issues.
+
+ID	Technical Risk / Question	Impact	Probability	Proposed Action	Responsible
+TR-01	External API availability	High	Medium	Create fallback mechanism	Backend team
+TR-02	Insufficient training data	High	High	Evaluate available datasets	AI team
+The objective is to discover design problems before they become implementation problems.

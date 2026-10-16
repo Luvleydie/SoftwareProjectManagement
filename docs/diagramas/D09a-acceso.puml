@@ -1,0 +1,80 @@
+@startuml
+!pragma layout smetana
+hide circle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #526E87
+skinparam entityBackgroundColor #EAF3FA
+skinparam noteBackgroundColor #FFF4D6
+skinparam nodesep 50
+skinparam ranksep 55
+top to bottom direction
+
+' Generado desde §9 por scripts/generar_modelo_er.py; editar el Mermaid de origen.
+title
+D09a · Acceso, MFA y auditoría
+Claves y cardinalidades · diccionario completo en §8
+end title
+entity "users" as users {
+  id : uuid <<PK>>
+  email : text <<UK>>
+  password_hash : text
+  role : text
+  status : text
+}
+entity "sessions" as sessions {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  csrf_hash : text
+  expires_at : timestamptz
+  last_seen_at : timestamptz
+  reauthenticated_at : timestamptz
+}
+entity "password_reset_tokens" as password_reset_tokens {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  consumed_at : timestamptz
+}
+entity "mfa_credentials" as mfa_credentials {
+  id : uuid <<PK>>
+  user_id : uuid <<FK,UK>>
+  secret_ciphertext : text
+  enrollment_required : boolean
+  last_used_step : bigint
+}
+entity "mfa_challenges" as mfa_challenges {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  purpose : text
+  pending_secret_ciphertext : text
+}
+entity "mfa_recovery_codes" as mfa_recovery_codes {
+  id : uuid <<PK>>
+  user_id : uuid <<FK>>
+  token_hash : text <<UK>>
+  consumed_at : timestamptz
+}
+entity "audit_events" as audit_events {
+  id : uuid <<PK>>
+  actor_id : uuid <<FK>>
+  action : text
+  target_id : uuid
+  request_id : uuid
+}
+users ||--o{ sessions : autentica
+users ||--o{ password_reset_tokens : recupera
+users ||--o| mfa_credentials : configura
+users ||--o{ mfa_challenges : verifica
+users ||--o{ mfa_recovery_codes : recupera_mfa
+users |o--o{ audit_events : actua
+legend bottom
+PK = primaria · FK = foránea · UK = única · o = opcional · | = uno · { = varios
+Atributos estructurales; obligatoriedad, enums, índices y restricciones completos en §8.
+Vista parcial: las tablas repetidas designan las mismas entidades; todas las relaciones figuran en D09.
+endlegend
+@enduml

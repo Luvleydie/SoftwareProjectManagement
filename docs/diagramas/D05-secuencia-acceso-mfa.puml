@@ -1,0 +1,63 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #375875
+skinparam ParticipantBackgroundColor #EAF3FA
+skinparam LifeLineBorderColor #9BAFBE
+skinparam noteBackgroundColor #FFF4D6
+autonumber
+title D05 · Acceso, MFA administrativo y cierre de sesión\nFR-01, FR-02 · NFR-06, NFR-08, NFR-10, NFR-15 · AC-01, AC-02
+actor "Persona" as U
+boundary "UI01 · Acceso" as UI
+control "M01 · Identidad" as AUTH
+database "PostgreSQL" as DB
+control "M08 · Auditoría" as AUD
+U -> UI : Correo y contraseña
+UI -> AUTH : POST /api/v1/auth/login\nHTTPS + origen permitido
+AUTH -> AUTH : Límite de intentos y protección temporal
+alt Límite excedido
+  AUTH --> UI : 429 + Retry-After
+else Intento permitido
+  AUTH -> DB : Consultar usuario y estado
+  DB --> AUTH : Hash adaptativo y rol
+  AUTH -> AUTH : Comparación segura de contraseña
+  alt Credenciales inválidas / cuenta no disponible
+    AUTH -> AUD : Fallo de acceso (sin contraseña)
+    AUTH --> UI : 401 · mensaje genérico
+  else Credenciales válidas
+    alt Rol Administrator
+      AUTH -> DB : Crear desafío MFA de un uso\ncon vencimiento y límite de intentos
+      AUTH --> UI : 202 · mfa_required + challenge_token\nsin sesión autenticada
+      U -> UI : Código TOTP
+      UI -> AUTH : POST /api/v1/auth/mfa/verify
+      AUTH -> DB : Validar desafío + TOTP\nconsumir desafío de forma atómica
+      alt Código inválido / desafío vencido
+        AUTH -> AUD : Fallo MFA
+        AUTH --> UI : 401 / 429 · no crear sesión
+      else MFA válido
+        AUTH -> DB : Crear sesión revocable
+        AUTH --> UI : 200 + cookie Secure, HttpOnly, SameSite
+      end
+    else Rol User
+      AUTH -> DB : Crear sesión revocable
+      AUTH --> UI : 200 + cookie Secure, HttpOnly, SameSite
+    end
+  end
+end
+opt Solo si existe una sesión autenticada
+  UI -> AUTH : Petición protegida + cookie\nCSRF en operaciones de escritura
+  AUTH -> DB : Validar sesión vigente + rol + propietario
+  AUTH --> UI : Recurso permitido o 403 / 404
+  U -> UI : Cerrar sesión
+  UI -> AUTH : POST /api/v1/auth/logout
+  AUTH -> DB : Revocar sesión
+  AUTH --> UI : 204 + eliminar cookie
+end
+note over UI,DB
+La recuperación usa token aleatorio de un uso, hash almacenado y vencimiento.
+La respuesta al solicitar recuperación no revela si existe el correo.
+El cambio de contraseña revoca sesiones; MFA administrativo no se omite.
+end note
+@enduml

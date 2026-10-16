@@ -1,0 +1,76 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam componentStyle rectangle
+skinparam ArrowColor #375875
+skinparam componentBackgroundColor #EAF3FA
+skinparam databaseBackgroundColor #E7F4EE
+skinparam noteBackgroundColor #FFF4D6
+top to bottom direction
+title D03 · Componentes y contratos internos
+component "React + TypeScript\nUI01–UI07" as UI
+interface "REST /api/v1\nJSON + multipart" as REST
+package "FastAPI · monolito modular" {
+  component "M01 Identidad\n/auth · sesiones · MFA · roles" as M01
+  component "M02 Expedientes/contexto\n/cases · jurisdicción · fecha" as M02
+  component "M03 Documentos\n/documents · ingesta" as M03
+  component "M04 Consulta RAG/feedback\n/conversations · /feedback" as M04
+  component "M05 Análisis/borradores\n/analyses · /drafts" as M05
+  component "M06 Fuentes\n/admin/sources · versiones" as M06
+  component "M07 Privacidad/exportación\n/privacy-requests · /exports" as M07
+  component "M08 Auditoría/evaluación\neventos mínimos · evaluación" as M08
+  component "Servicios compartidos\nAutorización · validación · transacciones" as CROSS
+  component "Repositorios\nSQL parametrizado · objetos privados" as REPO
+}
+package "Procesamiento asíncrono · mismo código de dominio" {
+  component "Worker\nleases · reintentos · generation" as W
+  component "Pipeline de ingesta\nvalidación · extracción · OCR · chunks" as INGEST
+  component "Pipeline RAG\nfiltros · evidencia · citas · abstención" as RAG
+  component "Adaptadores de modelos\nembeddings local · LLM configurable" as MODELS
+}
+database "PostgreSQL + pgvector\njobs + entidades + trazabilidad" as DB
+storage "Objetos privados" as OBJ
+UI --> REST
+REST --> CROSS
+CROSS --> M01
+CROSS --> M02
+CROSS --> M03
+CROSS --> M04
+CROSS --> M05
+CROSS --> M06
+CROSS --> M07
+M01 --> REPO
+M02 --> REPO
+M03 --> REPO
+M04 --> REPO
+M05 --> REPO
+M06 --> REPO
+M07 --> REPO
+REPO --> DB
+REPO --> OBJ
+W --> DB : reclamar / completar jobs
+W --> INGEST
+W --> RAG
+INGEST --> MODELS
+RAG --> MODELS
+INGEST --> REPO
+RAG --> REPO
+CROSS ..> M08 : eventos
+W ..> M08 : ingesta / IA / borrado
+M08 --> REPO
+M01 -[hidden]down-> M05
+M02 -[hidden]down-> M06
+M03 -[hidden]down-> M07
+M04 -[hidden]down-> M08
+legend bottom
+El control de acceso se aplica en cada operación y consulta.
+Los workers vuelven a comprobar propietario, estado y generation.
+Las flechas representan dependencias, no microservicios separados.
+M03 / M06 producen jobs de ingesta; M04 / M05 producen ai_runs + jobs.
+M07 produce jobs de exportación/purga. Transacción confirmada antes de HTTP 202.
+M08 registra auditoría y métricas sin contraseñas ni texto confidencial innecesario.
+endlegend
+@enduml
