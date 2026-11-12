@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 load_dotenv(Path(__file__).resolve().parents[1] / '.env', override=False)

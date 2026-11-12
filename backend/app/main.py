@@ -18,21 +18,19 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy import JSON, Column, Float, Integer, String, delete, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import Session
 
-from .database import DATABASE_URL, engine, SessionLocal, database_status
+from .database import Base, DATABASE_URL, engine, SessionLocal, database_status
 from .ai import AIError, ai_status
 from .legal import prepare_answer, prepare_draft, prepare_document_review, prepare_template
+from . import models as _models  # noqa: F401 — registers LegalSource/SourceVersion with Base
+from .sources import router as sources_router
 
 ALLOWED_ORIGINS = set(os.getenv('JURIDIA_ALLOWED_ORIGINS', 'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:8000,http://testserver').split(','))
 SECURE_COOKIE = os.getenv('JURIDIA_SECURE_COOKIES', 'false').lower() == 'true'
 COOKIE_NAME = 'juridia_session'
 hasher = PasswordHasher()
 dummy_hash = hasher.hash(secrets.token_hex(20))
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class UserRow(Base):
@@ -77,6 +75,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title='juridIA API', version='0.3.0', lifespan=lifespan)
+app.include_router(sources_router)
 attempts: dict[str, deque] = defaultdict(deque)
 attempt_lock = Lock()
 

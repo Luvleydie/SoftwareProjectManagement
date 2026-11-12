@@ -76,6 +76,8 @@ El script no cambia la política de ejecución de PowerShell. Para instalar el r
 
 SQLAlchemy admite PostgreSQL mediante `JURIDIA_DATABASE_URL`, por ejemplo `postgresql+psycopg://usuario:clave@localhost:5432/juridia`. No se incluyen credenciales. Puedes establecer las variables en `backend/.env` o en el proceso; las del proceso tienen prioridad.
 
+El DDL PostgreSQL para las tablas que usa actualmente la aplicación está en [`db/schema.postgresql.sql`](db/schema.postgresql.sql). Para crear las tablas manualmente en una base ya creada: `psql -d juridia -f db/schema.postgresql.sql`. Al iniciar, SQLAlchemy también crea las tablas que falten. Este esquema no incluye pgvector: los embeddings todavía se guardan como JSON y la dimensión vectorial está pendiente de decidir.
+
 El esquema `users`, `sessions`, `artifacts`, `draft_versions` es una simplificación de desarrollo, con recursos JSON y controles de propietario en la API. La nueva tabla de versiones se crea al arrancar, conservando los datos existentes. Aún no implementa el diccionario relacional completo, Alembic, RLS, pgvector, embeddings, S3, extracción aislada, trabajos persistentes ni SSE.
 
 Orden propuesto para continuar:
