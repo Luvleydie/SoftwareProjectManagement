@@ -3,7 +3,7 @@
 Fecha: generado al iniciar ejecución del plan.  
 Fuente de requisitos: SRS `docs/fuentes/02-requisitos-proyecto.txt`.  
 Diseño de referencia: `docs/secciones/05-trazabilidad.md` (§16).  
-Estado del prototipo: Incremento 0.3 — `VERIFICACION-IMPLEMENTACION.md`.
+Estado del prototipo: Incremento 0.3 — [`Documentation/VERIFICACION-IMPLEMENTACION.md`](../Documentation/VERIFICACION-IMPLEMENTACION.md).
 
 Esta matriz conecta cada requisito Must con su historia de usuario, el módulo de diseño, los componentes del prototipo actual y la evidencia de prueba prevista. La columna **Estado** refleja el prototipo 0.3; se actualiza con cada incremento.
 

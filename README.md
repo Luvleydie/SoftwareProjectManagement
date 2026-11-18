@@ -74,9 +74,11 @@ El script no cambia la política de ejecución de PowerShell. Para instalar el r
 
 ## Base de datos y siguientes incrementos
 
+**Base de datos objetivo: PostgreSQL + pgvector.** Esta decisión está registrada en [`docs/decision-arquitectonica.md`](docs/decision-arquitectonica.md). El prototipo 0.3 usa MySQL/XAMPP en desarrollo local; la migración a PostgreSQL es el primer paso del siguiente incremento.
+
 SQLAlchemy admite PostgreSQL mediante `JURIDIA_DATABASE_URL`, por ejemplo `postgresql+psycopg://usuario:clave@localhost:5432/juridia`. No se incluyen credenciales. Puedes establecer las variables en `backend/.env` o en el proceso; las del proceso tienen prioridad.
 
-El DDL PostgreSQL para las tablas que usa actualmente la aplicación está en [`db/schema.postgresql.sql`](db/schema.postgresql.sql). Para crear las tablas manualmente en una base ya creada: `psql -d juridia -f db/schema.postgresql.sql`. Al iniciar, SQLAlchemy también crea las tablas que falten. Este esquema no incluye pgvector: los embeddings todavía se guardan como JSON y la dimensión vectorial está pendiente de decidir.
+El DDL PostgreSQL para las tablas que usa actualmente la aplicación está en [`db/schema.postgresql.sql`](db/schema.postgresql.sql). Para crear las tablas manualmente en una base ya creada: `psql -d juridia -f db/schema.postgresql.sql`. Al iniciar, SQLAlchemy también crea las tablas que falten. Este esquema no incluye pgvector: los embeddings todavía se guardan como JSON y la dimensión vectorial está pendiente de decidir (ver `docs/decision-arquitectonica.md` §Decisión 4).
 
 El esquema `users`, `sessions`, `artifacts`, `draft_versions` es una simplificación de desarrollo, con recursos JSON y controles de propietario en la API. La nueva tabla de versiones se crea al arrancar, conservando los datos existentes. Aún no implementa el diccionario relacional completo, Alembic, RLS, pgvector, embeddings, S3, extracción aislada, trabajos persistentes ni SSE.
 
@@ -106,7 +108,14 @@ node scripts/verify-browser.mjs
 .\.venv\Scripts\python.exe scripts/verify_ai.py
 ```
 
-Evidencias y límites de las comprobaciones: [VERIFICACION-IMPLEMENTACION.md](VERIFICACION-IMPLEMENTACION.md).
+Evidencias y límites de las comprobaciones: [`Documentation/VERIFICACION-IMPLEMENTACION.md`](Documentation/VERIFICACION-IMPLEMENTACION.md).
+
+## Documentación del proyecto
+
+- `Documentation/` — entregables académicos: requisitos, arquitectura de referencia, verificación y planes de incremento.
+- `docs/` — documentación técnica de trabajo: decisiones arquitectónicas, backlog Must, trazabilidad, diagramas y guía de herramientas.
+- Guía de herramientas y estado del stack: [`docs/herramientas.md`](docs/herramientas.md).
+- Decisiones confirmadas de arquitectura: [`docs/decision-arquitectonica.md`](docs/decision-arquitectonica.md).
 
 ## Límites de despliegue
 

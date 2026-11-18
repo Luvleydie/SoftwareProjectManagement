@@ -2,7 +2,7 @@
 
 Fecha: generado al iniciar ejecución del plan.  
 Base: SRS `docs/fuentes/02-requisitos-proyecto.txt` (44 Must, 10 Should, 24 AC).  
-Estado del prototipo: Incremento 0.3 — ver `VERIFICACION-IMPLEMENTACION.md`.  
+Estado del prototipo: Incremento 0.3 — ver [`Documentation/VERIFICACION-IMPLEMENTACION.md`](../Documentation/VERIFICACION-IMPLEMENTACION.md).  
 Jurisdicción piloto: México · Durango · Victoria de Durango.
 
 ---
