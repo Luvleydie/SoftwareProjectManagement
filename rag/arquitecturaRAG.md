@@ -175,7 +175,14 @@ No usar `embedding_json` ni `chunks` como segunda fuente de verdad una vez migra
 - Adoptar una única configuración cargada por el backend y reutilizada por `rag/main.py`. La URL PostgreSQL explícita para pruebas (`JURIDIA_DATABASE_URL`) conserva prioridad; para ejecución local, adaptar el cargador compartido para leer las variables PostgreSQL existentes (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) del `.env` raíz y construir la URL sin escribir secretos en disco ni logs.
 - Si falta configuración, el pipeline falla con un mensaje de variables faltantes; no cae silenciosamente a MySQL, SQLite ni una base distinta.
 - Configurar Ollama mediante `JURIDIA_OLLAMA_URL` con valor local por defecto, y el modelo como perfil de embeddings separado del modelo generativo. No reutilizar `JURIDIA_AI_MODEL` para evitar mezclar responsabilidades.
-- La CLI propuesta admite previsualización sin escrituras, ingesta normal e informe final: hash, versión, conteos de chunks listos/fallidos y advertencias. No imprime texto legal completo.
+- La CLI implementada admite previsualización sin escrituras e ingesta reanudable. Desde la raíz del repositorio:
+
+  ```powershell
+  .\backend\.venv\Scripts\python.exe -m rag.main --dry-run
+  .\backend\.venv\Scripts\python.exe -m rag.main
+  ```
+
+- Aplicar `db/migrations/001_rag_schema.sql` una vez en la base PostgreSQL configurada antes de ingerir. La CLI informa hash, versión, conteos de chunks listos/fallidos y advertencias sin imprimir el texto legal completo.
 - Sustituir en la futura implementación el camino obsoleto de `backend/scripts/seed_sources.py`; no mantener dos mecanismos que creen versiones del mismo archivo.
 
 ## 8. Fallos, observabilidad y seguridad
@@ -186,7 +193,7 @@ No usar `embedding_json` ni `chunks` como segunda fuente de verdad una vez migra
 - La fuente legal se envía únicamente a Ollama local. No usar endpoints externos ni bibliotecas que suban el contenido.
 - La creación de embeddings no autentica la vigencia legal. Mantener el versionado y la activación administrativa existentes; revisión jurídica antes de incorporar la fuente a consultas.
 
-## 9. Criterios de aceptación para la futura implementación
+## 9. Criterios de aceptación
 
 1. `rag/main.py` procesa la ruta canónica bajo `rag/src/` y no depende del archivo eliminado de la raíz.
 2. Una ejecución de previsualización no escribe en PostgreSQL; informa cantidad de unidades, jerarquía y advertencias sin exponer texto completo.
