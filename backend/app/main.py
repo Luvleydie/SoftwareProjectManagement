@@ -24,7 +24,9 @@ from .database import Base, DATABASE_URL, engine, SessionLocal, database_status
 from .ai import AIError, ai_status
 from .legal import prepare_answer, prepare_draft, prepare_document_review, prepare_template
 from . import models as _models  # noqa: F401 — registers LegalSource/SourceVersion with Base
+from . import pipeline_models as _pipeline_models  # noqa: F401 — registers IngestedDocument
 from .sources import router as sources_router
+from .pipeline_routes import router as pipeline_router
 
 ALLOWED_ORIGINS = set(os.getenv('JURIDIA_ALLOWED_ORIGINS', 'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:8000,http://testserver').split(','))
 SECURE_COOKIE = os.getenv('JURIDIA_SECURE_COOKIES', 'false').lower() == 'true'
@@ -76,6 +78,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title='juridIA API', version='0.3.0', lifespan=lifespan)
 app.include_router(sources_router)
+app.include_router(pipeline_router)
 attempts: dict[str, deque] = defaultdict(deque)
 attempt_lock = Lock()
 
