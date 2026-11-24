@@ -10,7 +10,7 @@ Verificaciones deterministas (sin heurísticas ni IA):
 import hashlib
 import time
 
-from .state import PipelineState, MIME_TO_DOCTYPE
+from ..state import PipelineState, MIME_TO_DOCTYPE
 
 # ── Magic bytes ──────────────────────────────────────────────────────────────
 

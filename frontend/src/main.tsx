@@ -5,7 +5,6 @@ import "./styles.css";
 import "./views.css";
 import "./refinements.css";
 import "./accessibility.css";
-import "./simple.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -104,12 +104,13 @@ def persist_node(state: PipelineState) -> dict:
                 total_chunks=state.get('total_chunks', 0),
                 avg_chunk_size=state.get('avg_chunk_size', 0),
                 status='completed',
-                pipeline_version=state.get('pipeline_version', '1.0.0'),
+                pipeline_version=state.get('pipeline_version', '1.1.0'),
                 steps=steps,  # Se actualiza al final
                 duration_total_ms=0,  # Se actualiza al final
                 owner_id=owner_id or None,
                 source_version_id=state.get('source_version_id') or None,
                 processed_at=now,
+                embedding_status=state.get('embedding_status', 'pending'),
             )
             db.add(doc_row)
             db.commit()

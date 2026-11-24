@@ -119,6 +119,13 @@ class PipelineState(TypedDict, total=False):
     total_chunks: int
     avg_chunk_size: int
 
+    # ── Embedding (nodo: embed) ──────────────────────────────────────────
+    generate_embeddings: bool         # True para activar el nodo embed
+    embedding_model: str              # Nombre del modelo usado (e.g. all-minilm:latest)
+    embedding_model_digest: str       # Digest del modelo para idempotencia
+    embedding_status: str             # pending | ready | partial | failed
+    embedded_count: int               # Chunks con embedding exitoso
+
     # ── Persistencia (nodo: persist) ─────────────────────────────────────
     document_id: str                  # UUID asignado al documento
     ingestion_run_id: str             # UUID de la ejecución de ingesta
